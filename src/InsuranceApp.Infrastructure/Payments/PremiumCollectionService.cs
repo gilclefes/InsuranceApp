@@ -7,7 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InsuranceApp.Infrastructure.Payments;
 
-public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCollectionService
+public class PremiumCollectionService(
+    InsuranceDbContext dbContext,
+    IPaymentGatewayRouter gatewayRouter,
+    IWebhookSignatureValidator signatureValidator) : IPremiumCollectionService
 {
     public async Task<PremiumCollectionItemResponse> CreateMandateAsync(CreatePremiumMandateRequest request, CancellationToken cancellationToken = default)
     {
@@ -28,7 +31,9 @@ public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCo
         {
             PolicyId = policy.Id,
             TransactionReference = $"MND-{policy.PolicyNumber}-{DateTime.UtcNow:yyyyMMddHHmmss}",
+            IdempotencyKey = externalRef,
             Provider = provider,
+            ProviderReference = externalRef,
             PaymentChannel = channel,
             Amount = policy.PremiumAmount,
             Status = PaymentStatus.Initiated,
@@ -55,6 +60,7 @@ public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCo
         {
             PolicyId = policy.Id,
             TransactionReference = $"COL-{policy.PolicyNumber}-{DateTime.UtcNow:yyyyMMddHHmmss}",
+            IdempotencyKey = $"SCH-{policy.PolicyNumber}-{request.DueDateUtc:yyyyMMdd}",
             Provider = string.IsNullOrWhiteSpace(request.Provider) ? "MTN_MOMO" : request.Provider.Trim(),
             PaymentChannel = string.IsNullOrWhiteSpace(request.PaymentChannel) ? "MoMo" : request.PaymentChannel.Trim(),
             Amount = request.Amount is > 0 ? request.Amount.Value : policy.PremiumAmount,
@@ -102,8 +108,14 @@ public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCo
     {
         var today = DateTime.UtcNow.Date;
         var dueItems = await dbContext.PremiumTransactions
+            .Include(x => x.Policy)
             .Where(x => x.DueDateUtc <= today && (x.Status == PaymentStatus.Pending || x.Status == PaymentStatus.Initiated))
             .ToListAsync(cancellationToken);
+
+        var customerIds = dueItems.Select(x => x.Policy?.CustomerId ?? 0).Where(id => id > 0).Distinct().ToList();
+        var customers = customerIds.Count == 0
+            ? new Dictionary<long, Customer>()
+            : await dbContext.Customers.Where(c => customerIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, cancellationToken);
 
         var now = DateTime.UtcNow;
         var success = 0;
@@ -116,23 +128,56 @@ public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCo
                 item.Status = PaymentStatus.Failed;
                 item.RetryCount += 1;
                 item.ProcessedAtUtc = now;
+                item.FailureReason = "Amount must be greater than zero.";
                 failed += 1;
                 continue;
             }
 
-            var shouldFail = item.RetryCount == 0 && item.Amount % 2 != 0;
-            if (shouldFail)
+            var gateway = gatewayRouter.Resolve(item.Provider);
+            customers.TryGetValue(item.Policy?.CustomerId ?? 0, out var customer);
+            var chargeRequest = new PaymentGatewayChargeRequest(
+                ProviderCode: item.Provider,
+                TransactionReference: item.TransactionReference,
+                IdempotencyKey: string.IsNullOrWhiteSpace(item.IdempotencyKey) ? item.TransactionReference : item.IdempotencyKey,
+                PolicyNumber: item.Policy?.PolicyNumber ?? string.Empty,
+                Amount: item.Amount,
+                CurrencyCode: item.Policy?.CurrencyCode ?? "GHS",
+                CustomerMsisdn: customer?.PhoneNumber ?? string.Empty,
+                CustomerEmail: customer?.Email ?? string.Empty,
+                Description: $"Premium for policy {item.Policy?.PolicyNumber}");
+
+            PaymentGatewayChargeResponse result;
+            try
             {
-                item.Status = PaymentStatus.Failed;
-                item.RetryCount += 1;
-                item.ProcessedAtUtc = now;
-                failed += 1;
+                result = await gateway.ChargeAsync(chargeRequest, cancellationToken);
             }
-            else
+            catch (Exception ex)
             {
-                item.Status = PaymentStatus.Success;
-                item.ProcessedAtUtc = now;
-                success += 1;
+                result = new PaymentGatewayChargeResponse(PaymentGatewayStatus.Failed, string.Empty, ex.Message, true);
+            }
+
+            item.ProviderReference = string.IsNullOrWhiteSpace(result.ProviderReference) ? item.ProviderReference : result.ProviderReference;
+            item.ProcessedAtUtc = now;
+
+            switch (result.Status)
+            {
+                case PaymentGatewayStatus.Success:
+                    item.Status = PaymentStatus.Success;
+                    item.FailureReason = string.Empty;
+                    success += 1;
+                    break;
+                case PaymentGatewayStatus.Pending:
+                    item.Status = PaymentStatus.Processing;
+                    item.FailureReason = string.Empty;
+                    break;
+                case PaymentGatewayStatus.Failed:
+                case PaymentGatewayStatus.Unsupported:
+                default:
+                    item.Status = PaymentStatus.Failed;
+                    item.RetryCount += 1;
+                    item.FailureReason = string.IsNullOrWhiteSpace(result.Message) ? "Provider declined the charge." : result.Message;
+                    failed += 1;
+                    break;
             }
         }
 
@@ -159,6 +204,7 @@ public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCo
         {
             item.Status = PaymentStatus.Success;
             item.ProcessedAtUtc = now;
+            item.FailureReason = string.Empty;
             success += 1;
         }
 
@@ -170,6 +216,164 @@ public class PremiumCollectionService(InsuranceDbContext dbContext) : IPremiumCo
             ItemsSucceeded = success,
             ItemsFailed = 0,
             ProcessedAtUtc = now
+        };
+    }
+
+    public async Task<PremiumCollectionWebhookResponse> ProcessWebhookAsync(PremiumCollectionWebhookRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.EventId))
+        {
+            throw new InvalidOperationException("EventId is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.TransactionReference))
+        {
+            throw new InvalidOperationException("TransactionReference is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Signature))
+        {
+            throw new InvalidOperationException("Webhook signature is required.");
+        }
+
+        if (!signatureValidator.Validate(request.Provider, request.RawPayload ?? string.Empty, request.Signature))
+        {
+            throw new InvalidOperationException("Webhook signature is invalid.");
+        }
+
+        var eventId = request.EventId.Trim();
+        var existingLog = await dbContext.PremiumCollectionWebhookLogs
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.EventId == eventId, cancellationToken);
+
+        if (existingLog is not null)
+        {
+            return new PremiumCollectionWebhookResponse
+            {
+                EventId = existingLog.EventId,
+                TransactionReference = existingLog.TransactionReference,
+                IsDuplicate = true,
+                Processed = true,
+                Message = "Duplicate event ignored."
+            };
+        }
+
+        var reference = request.TransactionReference.Trim();
+        var transaction = await dbContext.PremiumTransactions
+            .SingleOrDefaultAsync(x => x.TransactionReference == reference, cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var webhookLog = new PremiumCollectionWebhookLog
+        {
+            Provider = string.IsNullOrWhiteSpace(request.Provider) ? "Unknown" : request.Provider.Trim(),
+            EventId = eventId,
+            TransactionReference = reference,
+            PolicyNumber = string.IsNullOrWhiteSpace(request.PolicyNumber) ? string.Empty : request.PolicyNumber.Trim().ToUpperInvariant(),
+            Payload = string.IsNullOrWhiteSpace(request.RawPayload) ? System.Text.Json.JsonSerializer.Serialize(request) : request.RawPayload,
+            ProcessingStatus = "Received",
+            ReceivedAtUtc = now,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        };
+
+        if (transaction is null)
+        {
+            webhookLog.ProcessingStatus = "Rejected";
+            webhookLog.ProcessedAtUtc = now;
+            dbContext.PremiumCollectionWebhookLogs.Add(webhookLog);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return new PremiumCollectionWebhookResponse
+            {
+                EventId = eventId,
+                TransactionReference = reference,
+                IsDuplicate = false,
+                Processed = false,
+                Message = "Transaction reference not found."
+            };
+        }
+
+        transaction.ProviderReference = string.IsNullOrWhiteSpace(request.Signature) ? request.EventId : request.Signature;
+        transaction.ProcessedAtUtc = now;
+
+        var normalizedStatus = request.Status.Trim().ToLowerInvariant();
+        if (normalizedStatus is "success" or "successful" or "paid")
+        {
+            transaction.Status = PaymentStatus.Success;
+            transaction.FailureReason = string.Empty;
+            webhookLog.ProcessingStatus = "AppliedSuccess";
+        }
+        else if (normalizedStatus is "failed" or "error")
+        {
+            transaction.Status = PaymentStatus.Failed;
+            transaction.RetryCount += 1;
+            transaction.FailureReason = "Provider reported failure via webhook.";
+            webhookLog.ProcessingStatus = "AppliedFailure";
+        }
+        else
+        {
+            transaction.Status = PaymentStatus.Processing;
+            webhookLog.ProcessingStatus = "AppliedPending";
+        }
+
+        webhookLog.PolicyNumber = transaction.PolicyId > 0
+            ? (await dbContext.Policies.Where(x => x.Id == transaction.PolicyId).Select(x => x.PolicyNumber).SingleAsync(cancellationToken))
+            : webhookLog.PolicyNumber;
+        webhookLog.ProcessedAtUtc = now;
+        webhookLog.UpdatedAtUtc = now;
+
+        dbContext.PremiumCollectionWebhookLogs.Add(webhookLog);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new PremiumCollectionWebhookResponse
+        {
+            EventId = eventId,
+            TransactionReference = reference,
+            IsDuplicate = false,
+            Processed = true,
+            Message = "Webhook processed."
+        };
+    }
+
+    public async Task<PremiumReconciliationSummaryResponse> GetReconciliationSummaryAsync(DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
+    {
+        var end = (toUtc ?? DateTime.UtcNow).Date.AddDays(1).AddTicks(-1);
+        var start = (fromUtc ?? end.AddDays(-7)).Date;
+
+        var items = await dbContext.PremiumTransactions
+            .AsNoTracking()
+            .Where(x => x.DueDateUtc >= start && x.DueDateUtc <= end)
+            .Select(x => new PremiumCollectionItemResponse
+            {
+                TransactionReference = x.TransactionReference,
+                PolicyNumber = x.Policy != null ? x.Policy.PolicyNumber : string.Empty,
+                Amount = x.Amount,
+                CurrencyCode = x.Policy != null ? x.Policy.CurrencyCode : "GHS",
+                Provider = x.Provider,
+                PaymentChannel = x.PaymentChannel,
+                Status = x.Status.ToString(),
+                DueDateUtc = x.DueDateUtc,
+                ProcessedAtUtc = x.ProcessedAtUtc,
+                RetryCount = x.RetryCount
+            })
+            .ToListAsync(cancellationToken);
+
+        var exceptions = items
+            .Where(x => x.Status is nameof(PaymentStatus.Failed) or nameof(PaymentStatus.Pending) or nameof(PaymentStatus.Processing))
+            .ToList();
+
+        return new PremiumReconciliationSummaryResponse
+        {
+            FromUtc = start,
+            ToUtc = end,
+            TotalTransactions = items.Count,
+            PendingCount = items.Count(x => x.Status == nameof(PaymentStatus.Pending) || x.Status == nameof(PaymentStatus.Processing) || x.Status == nameof(PaymentStatus.Initiated)),
+            SuccessCount = items.Count(x => x.Status == nameof(PaymentStatus.Success)),
+            FailedCount = items.Count(x => x.Status == nameof(PaymentStatus.Failed)),
+            TotalAmount = items.Sum(x => x.Amount),
+            SuccessfulAmount = items.Where(x => x.Status == nameof(PaymentStatus.Success)).Sum(x => x.Amount),
+            FailedAmount = items.Where(x => x.Status == nameof(PaymentStatus.Failed)).Sum(x => x.Amount),
+            Exceptions = exceptions
         };
     }
 

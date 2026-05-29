@@ -1,0 +1,41 @@
+using InsuranceApp.Contracts.Claims;
+using System.ComponentModel.DataAnnotations;
+
+namespace InsuranceApp.Web.Models;
+
+public sealed class ClaimsAdminViewModel
+{
+    public string? StatusFilter { get; set; }
+    public string? AdjusterFilter { get; set; }
+    public string? PolicyFilter { get; set; }
+
+    [Required]
+    public string PolicyNumber { get; set; } = string.Empty;
+
+    [Required]
+    [DataType(DataType.Date)]
+    public DateTime IncidentDate { get; set; } = DateTime.UtcNow.Date;
+
+    [Required]
+    public string ClaimType { get; set; } = "Accident";
+
+    [Range(1, 100000000)]
+    public decimal ClaimedAmount { get; set; }
+
+    public string EvidenceUrl { get; set; } = string.Empty;
+
+    public string AssignClaimNumber { get; set; } = string.Empty;
+    public string AssignAdjusterUserId { get; set; } = string.Empty;
+    public string AssignNote { get; set; } = string.Empty;
+
+    public string ReviewClaimNumber { get; set; } = string.Empty;
+    public string ReviewAction { get; set; } = "under-review";
+    public decimal? ReviewApprovedAmount { get; set; }
+    public string ReviewReason { get; set; } = string.Empty;
+
+    public string TimelineClaimNumber { get; set; } = string.Empty;
+
+    public IReadOnlyCollection<ClaimResponse> Claims { get; set; } = Array.Empty<ClaimResponse>();
+    public IReadOnlyCollection<ClaimTimelineEventResponse> Timeline { get; set; } = Array.Empty<ClaimTimelineEventResponse>();
+    public ClaimSlaDashboardResponse? Dashboard { get; set; }
+}

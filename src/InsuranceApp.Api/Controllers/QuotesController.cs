@@ -2,10 +2,12 @@ using InsuranceApp.Application.Interfaces;
 using InsuranceApp.Contracts.Quotes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InsuranceApp.Api.Controllers;
 
 [ApiController]
+[EnableRateLimiting("quote")]
 [Route("api/v1/quotes")]
 public class QuotesController(IQuoteService quoteService) : ControllerBase
 {

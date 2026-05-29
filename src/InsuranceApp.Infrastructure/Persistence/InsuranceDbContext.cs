@@ -14,7 +14,11 @@ public class InsuranceDbContext(DbContextOptions<InsuranceDbContext> options) : 
     public DbSet<Claim> Claims => Set<Claim>();
     public DbSet<PolicyDocument> PolicyDocuments => Set<PolicyDocument>();
     public DbSet<PremiumTransaction> PremiumTransactions => Set<PremiumTransaction>();
+    public DbSet<PremiumCollectionWebhookLog> PremiumCollectionWebhookLogs => Set<PremiumCollectionWebhookLog>();
+    public DbSet<ClaimTimelineEvent> ClaimTimelineEvents => Set<ClaimTimelineEvent>();
+    public DbSet<ClaimNotification> ClaimNotifications => Set<ClaimNotification>();
     public DbSet<PayoutTransaction> PayoutTransactions => Set<PayoutTransaction>();
+    public DbSet<PayoutWebhookLog> PayoutWebhookLogs => Set<PayoutWebhookLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<OtpChallenge> OtpChallenges => Set<OtpChallenge>();
     public DbSet<IdentityAuditLog> IdentityAuditLogs => Set<IdentityAuditLog>();
@@ -168,8 +172,15 @@ public class InsuranceDbContext(DbContextOptions<InsuranceDbContext> options) : 
         modelBuilder.Entity<Claim>(entity =>
         {
             entity.HasIndex(x => x.ClaimNumber).IsUnique();
+            entity.HasIndex(x => new { x.Status, x.AssignedAdjusterId });
             entity.Property(x => x.ClaimNumber).HasMaxLength(64).IsRequired();
             entity.Property(x => x.ClaimType).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.EvidenceUrl).HasMaxLength(256);
+            entity.Property(x => x.AssignedAdjusterId).HasMaxLength(128);
+            entity.Property(x => x.DecisionReason).HasMaxLength(256);
+            entity.Property(x => x.ReviewNotes).HasMaxLength(512);
+            entity.Property(x => x.FraudScore).HasPrecision(5, 2);
+            entity.Property(x => x.FraudReason).HasMaxLength(256);
             entity.Property(x => x.ClaimedAmount).HasPrecision(18, 2);
             entity.Property(x => x.ApprovedAmount).HasPrecision(18, 2);
 
@@ -179,11 +190,42 @@ public class InsuranceDbContext(DbContextOptions<InsuranceDbContext> options) : 
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+            modelBuilder.Entity<ClaimTimelineEvent>(entity =>
+            {
+                entity.Property(x => x.EventType).HasMaxLength(40).IsRequired();
+                entity.Property(x => x.Description).HasMaxLength(512).IsRequired();
+                entity.Property(x => x.ActorUserId).HasMaxLength(128);
+                entity.HasIndex(x => new { x.ClaimId, x.EventAtUtc });
+
+                entity.HasOne(x => x.Claim)
+                .WithMany()
+                .HasForeignKey(x => x.ClaimId)
+                .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ClaimNotification>(entity =>
+            {
+                entity.Property(x => x.Channel).HasMaxLength(20).IsRequired();
+                entity.Property(x => x.Recipient).HasMaxLength(200).IsRequired();
+                entity.Property(x => x.Message).HasMaxLength(1000).IsRequired();
+                entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
+                entity.HasIndex(x => new { x.ClaimId, x.SentAtUtc });
+
+                entity.HasOne(x => x.Claim)
+                .WithMany()
+                .HasForeignKey(x => x.ClaimId)
+                .OnDelete(DeleteBehavior.Cascade);
+            });
+
         modelBuilder.Entity<PremiumTransaction>(entity =>
         {
             entity.HasIndex(x => x.TransactionReference).IsUnique();
+            entity.HasIndex(x => x.IdempotencyKey).IsUnique();
             entity.Property(x => x.TransactionReference).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
             entity.Property(x => x.Provider).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.ProviderReference).HasMaxLength(128);
+            entity.Property(x => x.FailureReason).HasMaxLength(256);
             entity.Property(x => x.PaymentChannel).HasMaxLength(50).IsRequired();
             entity.Property(x => x.Amount).HasPrecision(18, 2);
 
@@ -193,11 +235,27 @@ public class InsuranceDbContext(DbContextOptions<InsuranceDbContext> options) : 
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+            modelBuilder.Entity<PremiumCollectionWebhookLog>(entity =>
+            {
+                entity.HasIndex(x => x.EventId).IsUnique();
+                entity.Property(x => x.Provider).HasMaxLength(64).IsRequired();
+                entity.Property(x => x.EventId).HasMaxLength(128).IsRequired();
+                entity.Property(x => x.TransactionReference).HasMaxLength(128).IsRequired();
+                entity.Property(x => x.PolicyNumber).HasMaxLength(64).IsRequired();
+                entity.Property(x => x.Payload).HasColumnType("longtext");
+                entity.Property(x => x.ProcessingStatus).HasMaxLength(32).IsRequired();
+            });
+
         modelBuilder.Entity<PayoutTransaction>(entity =>
         {
             entity.HasIndex(x => x.PayoutReference).IsUnique();
+            entity.HasIndex(x => x.IdempotencyKey).IsUnique();
             entity.Property(x => x.PayoutReference).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
+            entity.Property(x => x.ProviderReference).HasMaxLength(128);
             entity.Property(x => x.DestinationChannel).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.DestinationAccount).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.FailureReason).HasMaxLength(256);
             entity.Property(x => x.Amount).HasPrecision(18, 2);
 
             entity.HasOne(x => x.Claim)
@@ -205,6 +263,16 @@ public class InsuranceDbContext(DbContextOptions<InsuranceDbContext> options) : 
                 .HasForeignKey(x => x.ClaimId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+            modelBuilder.Entity<PayoutWebhookLog>(entity =>
+            {
+                entity.HasIndex(x => x.EventId).IsUnique();
+                entity.Property(x => x.Provider).HasMaxLength(64).IsRequired();
+                entity.Property(x => x.EventId).HasMaxLength(128).IsRequired();
+                entity.Property(x => x.PayoutReference).HasMaxLength(128).IsRequired();
+                entity.Property(x => x.Payload).HasColumnType("longtext");
+                entity.Property(x => x.ProcessingStatus).HasMaxLength(32).IsRequired();
+            });
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {

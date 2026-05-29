@@ -1,0 +1,52 @@
+@model NewClaimViewModel
+@{
+    ViewData["Title"] = "File a Claim";
+}
+
+<h2>File a claim</h2>
+<p class="text-muted">Claims are only accepted for active policies (BR-001). Provide an evidence link (FR-013).</p>
+
+<form asp-action="NewClaim" method="post" novalidate>
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="PolicyNumber" class="form-label"></label>
+            <select asp-for="PolicyNumber" class="form-select">
+                <option value="">-- Select a policy --</option>
+                @foreach (var p in Model.EligiblePolicies)
+                {
+                    <option value="@p.PolicyNumber">@p.PolicyNumber - @p.ProductType (@p.CoverageType)</option>
+                }
+            </select>
+            <span asp-validation-for="PolicyNumber" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="IncidentDate" class="form-label"></label>
+            <input asp-for="IncidentDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="ClaimType" class="form-label"></label>
+            <input asp-for="ClaimType" class="form-control" placeholder="Accident, Theft, Fire..." />
+            <span asp-validation-for="ClaimType" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="ClaimedAmount" class="form-label"></label>
+            <input asp-for="ClaimedAmount" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="ClaimedAmount" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="EvidenceUrl" class="form-label"></label>
+            <input asp-for="EvidenceUrl" class="form-control" placeholder="https://..." />
+            <span asp-validation-for="EvidenceUrl" class="text-danger"></span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Submit claim</button>
+    <a class="btn btn-outline-secondary mt-3" asp-action="Claims">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

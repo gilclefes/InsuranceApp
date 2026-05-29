@@ -1,0 +1,62 @@
+@model GetQuoteViewModel
+@{
+    ViewData["Title"] = $"Quote: {Model.ProductName}";
+}
+
+<h2>Get a quote: @Model.ProductName</h2>
+<p class="text-muted">Provide risk inputs and select optional riders (FR-005).</p>
+
+<form asp-action="Start" method="post" novalidate>
+    @Html.AntiForgeryToken()
+    <input asp-for="ProductCode" type="hidden" />
+    <input asp-for="ProductName" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label asp-for="ApplicantAge" class="form-label"></label>
+            <input asp-for="ApplicantAge" class="form-control" type="number" />
+            <span asp-validation-for="ApplicantAge" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="CoverageAmount" class="form-label"></label>
+            <input asp-for="CoverageAmount" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="CoverageAmount" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="VehicleValue" class="form-label"></label>
+            <input asp-for="VehicleValue" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="VehicleValue" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="SumAssured" class="form-label"></label>
+            <input asp-for="SumAssured" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="SumAssured" class="text-danger"></span>
+        </div>
+    </div>
+
+    @if (Model.AvailableRiders.Any())
+    {
+        <h5 class="mt-4">Optional riders</h5>
+        <div class="row g-2">
+            @for (var i = 0; i < Model.AvailableRiders.Count; i++)
+            {
+                var rider = Model.AvailableRiders[i];
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="checkbox" name="SelectedRiderCodes" value="@rider.RiderCode" class="form-check-input" id="rider-@i" />
+                        <label for="rider-@i" class="form-check-label">
+                            @rider.Name <small class="text-muted">(@rider.AdjustmentType @rider.AdjustmentValue)</small>
+                        </label>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <button type="submit" class="btn btn-primary mt-4">Generate quote</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

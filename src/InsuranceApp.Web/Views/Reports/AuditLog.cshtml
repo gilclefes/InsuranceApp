@@ -1,0 +1,58 @@
+@model InsuranceApp.Web.Models.ReportsAuditViewModel
+@{
+    ViewData["Title"] = "Audit Log Explorer";
+    var q = Model.Query;
+    var r = Model.Result;
+}
+
+<h1>Identity Audit Log</h1>
+
+<form method="get" asp-action="AuditLog" class="row g-2 mb-3">
+    <div class="col-md-2"><input class="form-control" name="action" value="@q.Action" placeholder="Action" /></div>
+    <div class="col-md-2"><input class="form-control" name="outcome" value="@q.Outcome" placeholder="Outcome" /></div>
+    <div class="col-md-2"><input class="form-control" name="subjectId" value="@q.SubjectId" placeholder="Subject ID" /></div>
+    <div class="col-md-2"><input class="form-control" type="datetime-local" name="fromUtc" value="@(q.FromUtc?.ToString("yyyy-MM-ddTHH:mm"))" /></div>
+    <div class="col-md-2"><input class="form-control" type="datetime-local" name="toUtc" value="@(q.ToUtc?.ToString("yyyy-MM-ddTHH:mm"))" /></div>
+    <div class="col-md-2 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a class="btn btn-outline-secondary" asp-action="AuditLogExport"
+           asp-route-action="@q.Action" asp-route-outcome="@q.Outcome" asp-route-subjectId="@q.SubjectId"
+           asp-route-fromUtc="@q.FromUtc" asp-route-toUtc="@q.ToUtc">CSV</a>
+    </div>
+</form>
+
+<p class="text-muted">Showing page @r.Page of @(Math.Max(1, (int)Math.Ceiling((double)r.TotalCount / Math.Max(1, r.PageSize)))) — @r.TotalCount total events</p>
+
+<table class="table table-sm table-hover">
+    <thead><tr><th>Time (UTC)</th><th>Action</th><th>Outcome</th><th>Subject</th><th>Description</th><th>Correlation</th><th>IP</th></tr></thead>
+    <tbody>
+        @foreach (var i in r.Items)
+        {
+            <tr>
+                <td>@i.CreatedAtUtc.ToString("u")</td>
+                <td>@i.Action</td>
+                <td>@i.Outcome</td>
+                <td>@i.SubjectId</td>
+                <td>@i.Description</td>
+                <td><code>@i.CorrelationId</code></td>
+                <td>@i.IpAddress</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@{
+    var totalPages = Math.Max(1, (int)Math.Ceiling((double)r.TotalCount / Math.Max(1, r.PageSize)));
+}
+<nav>
+    <ul class="pagination">
+        @if (r.Page > 1)
+        {
+            <li class="page-item"><a class="page-link" asp-action="AuditLog" asp-route-page="@(r.Page - 1)" asp-route-action="@q.Action" asp-route-outcome="@q.Outcome" asp-route-subjectId="@q.SubjectId" asp-route-fromUtc="@q.FromUtc" asp-route-toUtc="@q.ToUtc">Prev</a></li>
+        }
+        @if (r.Page < totalPages)
+        {
+            <li class="page-item"><a class="page-link" asp-action="AuditLog" asp-route-page="@(r.Page + 1)" asp-route-action="@q.Action" asp-route-outcome="@q.Outcome" asp-route-subjectId="@q.SubjectId" asp-route-fromUtc="@q.FromUtc" asp-route-toUtc="@q.ToUtc">Next</a></li>
+        }
+    </ul>
+</nav>

@@ -1,0 +1,28 @@
+@model InsuranceApp.Web.Models.ReportsFinanceViewModel
+@{
+    ViewData["Title"] = "Finance Report";
+    var r = Model.Report;
+}
+
+<h1>Finance Report</h1>
+<p class="text-muted">Generated @r.GeneratedAtUtc.ToString("u")</p>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card"><div class="card-body"><h6 class="card-title">Total Policies</h6><h3>@r.TotalPolicies</h3></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><h6 class="card-title">Active</h6><h3>@r.ActivePolicies</h3></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><h6 class="card-title">Lapsed</h6><h3>@r.LapsedPolicies</h3></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><h6 class="card-title">Lapse Ratio</h6><h3>@((r.LapseRatio * 100).ToString("0.00"))%</h3></div></div></div>
+</div>
+
+<h3>Claims Aging</h3>
+<table class="table table-striped">
+    <thead><tr><th>Bucket</th><th class="text-end">Open Claims</th><th class="text-end">Claimed Amount (GHS)</th></tr></thead>
+    <tbody>
+        @foreach (var b in r.ClaimsAging)
+        {
+            <tr><td>@b.Bucket</td><td class="text-end">@b.Count</td><td class="text-end">@b.TotalClaimedAmount.ToString("N2")</td></tr>
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-outline-secondary" asp-action="AuditLog">View Identity Audit Log</a>

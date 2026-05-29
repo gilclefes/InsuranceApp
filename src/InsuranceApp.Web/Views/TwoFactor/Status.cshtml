@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Two-factor authentication";
+    var isEnabled = (bool)(ViewBag.IsEnabled ?? false);
+    var statusMessage = ViewBag.StatusMessage as string;
+}
+
+<h2>Two-factor authentication</h2>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="alert alert-info">@statusMessage</div>
+}
+
+<p>
+    Status: <strong class="@(isEnabled ? "text-success" : "text-danger")">@(isEnabled ? "Enabled" : "Not enabled")</strong>
+</p>
+
+@if (isEnabled)
+{
+    <form method="post" asp-action="Disable">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-outline-danger">Disable 2FA</button>
+    </form>
+}
+else
+{
+    <a asp-action="Enroll" class="btn btn-primary">Enable 2FA</a>
+}

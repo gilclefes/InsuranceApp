@@ -1,0 +1,73 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h2>Create your InsuranceApp account</h2>
+        <p class="text-muted">Self-service onboarding for individuals. KYC is performed against the NIA Ghana Card registry (FR-002).</p>
+
+        <form asp-action="Register" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="+233..." />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="GhanaCardNumber" class="form-label"></label>
+                    <input asp-for="GhanaCardNumber" class="form-control" placeholder="GHA-XXXXXXXXX-X" />
+                    <span asp-validation-for="GhanaCardNumber" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-check mt-3">
+                <input asp-for="ConsentAccepted" class="form-check-input" />
+                <label asp-for="ConsentAccepted" class="form-check-label"></label>
+                <div><span asp-validation-for="ConsentAccepted" class="text-danger"></span></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3 w-100">Create account</button>
+        </form>
+
+        <p class="text-muted mt-3">Already have an account? <a asp-action="Login">Sign in</a>.</p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

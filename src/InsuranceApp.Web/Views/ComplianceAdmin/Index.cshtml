@@ -1,0 +1,115 @@
+@model ComplianceAdminViewModel
+@{
+    ViewData["Title"] = "Compliance Admin";
+}
+
+<h2>Compliance Reporting</h2>
+<p class="text-muted">Review operational controls across premiums, payouts, claims, and identity audit logs.</p>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label asp-for="FromUtc" class="form-label">From (UTC)</label>
+        <input asp-for="FromUtc" class="form-control" type="date" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="ToUtc" class="form-label">To (UTC)</label>
+        <input asp-for="ToUtc" class="form-control" type="date" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary" type="submit">Apply Filter</button>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <a class="btn btn-outline-secondary" asp-action="Export" asp-route-fromUtc="@Model.FromUtc?.ToString("yyyy-MM-dd")" asp-route-toUtc="@Model.ToUtc?.ToString("yyyy-MM-dd")">Export CSV</a>
+    </div>
+</form>
+
+@if (Model.Summary is null)
+{
+    <div class="alert alert-info">No summary available.</div>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h5>Window</h5>
+        <div><strong>From:</strong> @Model.Summary.FromUtc.ToString("yyyy-MM-dd")</div>
+        <div><strong>To:</strong> @Model.Summary.ToUtc.ToString("yyyy-MM-dd")</div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="card p-3 h-100">
+                <h6>Premiums</h6>
+                <div>Total: @Model.Summary.PremiumTotalTransactions</div>
+                <div>Success: @Model.Summary.PremiumSuccessfulTransactions</div>
+                <div>Failed: @Model.Summary.PremiumFailedTransactions</div>
+                <div>Success Rate: @Model.Summary.PremiumSuccessRate.ToString("N2")%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 h-100">
+                <h6>Payouts</h6>
+                <div>Total: @Model.Summary.PayoutTotalTransactions</div>
+                <div>Success: @Model.Summary.PayoutSuccessfulTransactions</div>
+                <div>Failed: @Model.Summary.PayoutFailedTransactions</div>
+                <div>Success Rate: @Model.Summary.PayoutSuccessRate.ToString("N2")%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 h-100">
+                <h6>Claims</h6>
+                <div>Total: @Model.Summary.ClaimsTotal</div>
+                <div>Approved/Closed: @Model.Summary.ClaimsApproved</div>
+                <div>Rejected: @Model.Summary.ClaimsRejected</div>
+                <div>Fraud Flagged: @Model.Summary.ClaimsFraudFlagged</div>
+                <div>SLA Breaches: @Model.Summary.ClaimsSlaBreached</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 h-100">
+                <h6>Identity Audit</h6>
+                <div>Total: @Model.Summary.IdentityAuditTotal</div>
+                <div>Failures: @Model.Summary.IdentityAuditFailures</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-3 mb-3">
+        <h5>Exceptions (@Model.Summary.Exceptions.Count)</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Reference</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                        <th>Reason</th>
+                        <th>When (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Summary.Exceptions.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-muted">No exceptions in this period.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.Summary.Exceptions)
+                        {
+                            <tr>
+                                <td>@item.Category</td>
+                                <td>@item.Reference</td>
+                                <td>@item.Status</td>
+                                <td>@(item.Amount?.ToString("N2") ?? "-")</td>
+                                <td>@item.Reason</td>
+                                <td>@item.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

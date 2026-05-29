@@ -10,11 +10,16 @@ namespace InsuranceApp.Web.Controllers;
 public class PremiumAdminController(IPremiumCollectionService premiumCollectionService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(string? policyNumber, CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? policyNumber, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken)
     {
+        var from = fromUtc?.Date ?? DateTime.UtcNow.Date.AddDays(-7);
+        var to = toUtc?.Date ?? DateTime.UtcNow.Date;
         var model = new PremiumAdminViewModel
         {
-            PolicyNumber = policyNumber ?? string.Empty
+            PolicyNumber = policyNumber ?? string.Empty,
+            ReconciliationFromUtc = from,
+            ReconciliationToUtc = to,
+            Reconciliation = await premiumCollectionService.GetReconciliationSummaryAsync(from, to, cancellationToken)
         };
 
         if (!string.IsNullOrWhiteSpace(policyNumber))
@@ -101,6 +106,38 @@ public class PremiumAdminController(IPremiumCollectionService premiumCollectionS
     {
         var result = await premiumCollectionService.RetryFailedCollectionsAsync(cancellationToken);
         TempData["Success"] = $"Retry complete. Recovered: {result.ItemsSucceeded}.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProcessWebhook(PremiumAdminViewModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var eventId = string.IsNullOrWhiteSpace(model.WebhookEventId)
+                ? $"EVT-{Guid.NewGuid():N}"[..18]
+                : model.WebhookEventId.Trim();
+
+            var response = await premiumCollectionService.ProcessWebhookAsync(new PremiumCollectionWebhookRequest
+            {
+                Provider = model.Provider,
+                EventId = eventId,
+                TransactionReference = model.WebhookTransactionReference,
+                PolicyNumber = model.PolicyNumber,
+                Status = model.WebhookStatus,
+                Signature = "WEB-ADMIN-SIGNATURE",
+                EventTimeUtc = DateTime.UtcNow,
+                RawPayload = string.Empty
+            }, cancellationToken);
+
+            TempData["Success"] = response.Message;
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }

@@ -1,55 +1,62 @@
 ﻿@{
-    ViewData["Title"] = "Insurance Operations";
+    ViewData["Title"] = "InsuranceApp - Ghana";
 }
 
-<div class="row g-3">
-    <div class="col-12">
-        <h1 class="display-6">InsuranceApp Operations Portal</h1>
-        <p class="text-muted">Manage policy issuance, premium collections, and product setup from one workspace.</p>
-    </div>
-
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Policy Admin</h5>
-                    <p class="card-text">Create policies from quotes, monitor policy status, and run lifecycle actions.</p>
-                    <a class="btn btn-primary" asp-controller="PolicyAdmin" asp-action="Index">Open Policy Admin</a>
-                </div>
-            </div>
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">Insurance you can buy and claim from your phone.</h1>
+        <p class="col-md-9 fs-5">Motor, Education, Funeral and Custom policies for Ghana. Onboard with your Ghana Card, pay by Mobile Money, and track claims digitally.</p>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-primary btn-lg" asp-controller="Products" asp-action="Index">Browse products</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="btn btn-success btn-lg" asp-controller="Customer" asp-action="Dashboard">My dashboard</a>
+            }
+            else
+            {
+                <a class="btn btn-outline-primary btn-lg" asp-controller="Account" asp-action="Register">Create account</a>
+                <a class="btn btn-outline-secondary btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+            }
         </div>
+    </div>
+</div>
 
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body">
+            <h5 class="card-title">1. Get a quote</h5>
+            <p class="card-text">Choose a product and we will calculate your premium in seconds based on your risk profile and selected riders.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body">
+            <h5 class="card-title">2. Verify and purchase</h5>
+            <p class="card-text">Confirm your identity with your Ghana Card, accept the policy terms digitally, and authorize Mobile Money or bank collection.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body">
+            <h5 class="card-title">3. Manage and claim</h5>
+            <p class="card-text">Track policies, see upcoming premium debits, and file claims with evidence directly from your dashboard.</p>
+        </div></div>
+    </div>
+</div>
+
+@if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Agent")))
+{
+    <hr class="my-4" />
+    <h4>Operations</h4>
+    <div class="row g-2">
+        <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="PolicyAdmin" asp-action="Index">Policy Admin</a></div>
+        <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="ClaimsAdmin" asp-action="Index">Claims Admin</a></div>
         @if (User.IsInRole("Admin"))
         {
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Premium Admin</h5>
-                        <p class="card-text">Capture mandates, schedule premium pulls, and run due/retry collection cycles.</p>
-                        <a class="btn btn-outline-primary" asp-controller="PremiumAdmin" asp-action="Index">Open Premium Admin</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Product Admin</h5>
-                        <p class="card-text">Maintain products, risk rules, and riders used by quote and issuance workflows.</p>
-                        <a class="btn btn-outline-primary" asp-controller="ProductAdmin" asp-action="Index">Open Product Admin</a>
-                    </div>
-                </div>
-            </div>
+            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="ProductAdmin" asp-action="Index">Product Admin</a></div>
+            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="PremiumAdmin" asp-action="Index">Premium Admin</a></div>
+            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="PayoutAdmin" asp-action="Index">Payout Admin</a></div>
+            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="ComplianceAdmin" asp-action="Index">Compliance</a></div>
+            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="DataRetentionAdmin" asp-action="Index">Data Retention</a></div>
+            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="OperationsAdmin" asp-action="Index">Operations</a></div>
         }
-    }
-    else
-    {
-        <div class="col-12">
-            <div class="alert alert-info">
-                Login is required to access admin and operations forms.
-                <a asp-controller="Account" asp-action="Login" class="alert-link">Sign in</a>
-            </div>
-        </div>
-    }
-</div>
+    </div>
+}

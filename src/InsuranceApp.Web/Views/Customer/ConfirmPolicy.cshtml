@@ -1,0 +1,76 @@
+@model ConfirmPolicyViewModel
+@{
+    ViewData["Title"] = "Confirm Policy";
+}
+
+<h2>Confirm your purchase</h2>
+<p class="text-muted">Review the quote then digitally accept the policy terms (FR-006, FR-008).</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div><strong>Product:</strong> @Model.ProductName</div>
+        <div><strong>Quote reference:</strong> @Model.QuoteReference</div>
+        <div><strong>Total premium:</strong> @Model.TotalPremium.ToString("N2") @Model.CurrencyCode</div>
+    </div>
+</div>
+
+<form asp-action="ConfirmPolicy" method="post" novalidate>
+    @Html.AntiForgeryToken()
+    <input asp-for="QuoteReference" type="hidden" />
+    <input asp-for="ProductCode" type="hidden" />
+    <input asp-for="ProductName" type="hidden" />
+    <input asp-for="TotalPremium" type="hidden" />
+    <input asp-for="CurrencyCode" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="CoverageType" class="form-label"></label>
+            <select asp-for="CoverageType" class="form-select">
+                <option>Standard</option>
+                <option>Comprehensive</option>
+                <option>ThirdParty</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="InceptionDate" class="form-label"></label>
+            <input asp-for="InceptionDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="ExpiryDate" class="form-label"></label>
+            <input asp-for="ExpiryDate" class="form-control" type="date" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="PaymentChannel" class="form-label"></label>
+            <select asp-for="PaymentChannel" class="form-select">
+                <option value="MoMo">Mobile Money (MTN / Telecel / AT)</option>
+                <option value="Bank">Bank (GhIPSS)</option>
+                <option value="Card">Card</option>
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="MandateReference" class="form-label"></label>
+            <input asp-for="MandateReference" class="form-control" placeholder="e.g. MoMo number or bank account" />
+            <span asp-validation-for="MandateReference" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <label asp-for="DigitalSignature" class="form-label"></label>
+        <input asp-for="DigitalSignature" class="form-control" />
+        <span asp-validation-for="DigitalSignature" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mt-2">
+        <input asp-for="SignatureConfirmed" class="form-check-input" />
+        <label asp-for="SignatureConfirmed" class="form-check-label"></label>
+        <div><span asp-validation-for="SignatureConfirmed" class="text-danger"></span></div>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">Issue policy</button>
+    <a class="btn btn-outline-secondary mt-3" asp-controller="Products" asp-action="Index">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,235 @@
+@model ClaimsAdminViewModel
+@{
+    ViewData["Title"] = "Claims Admin";
+}
+
+<h2>Claims Intake and Review</h2>
+<p class="text-muted">Capture claims, assign adjusters, and progress adjudication decisions.</p>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (Model.Dashboard is not null)
+{
+    <div class="card p-3 mb-3">
+        <h5>Claims SLA Dashboard</h5>
+        <div class="row g-2">
+            <div class="col-md-3"><strong>Open Claims:</strong> @Model.Dashboard.TotalOpenClaims</div>
+            <div class="col-md-3"><strong>SLA Breaches:</strong> @Model.Dashboard.BreachedClaims</div>
+            <div class="col-md-3"><strong>High Fraud Risk:</strong> @Model.Dashboard.HighFraudRiskClaims</div>
+            <div class="col-md-3"><strong>Breach %:</strong> @Model.Dashboard.BreachPercentage.ToString("N2")%</div>
+        </div>
+    </div>
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+            <option value="">All</option>
+            <option value="Filed">Filed</option>
+            <option value="UnderReview">UnderReview</option>
+            <option value="AwaitingDocuments">AwaitingDocuments</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Closed">Closed</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Adjuster</label>
+        <input name="adjusterUserId" value="@Model.AdjusterFilter" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Policy Number</label>
+        <input name="policyNumber" value="@Model.PolicyFilter" class="form-control" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-outline-primary" type="submit">Filter</button>
+    </div>
+</form>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Claim Timeline Lookup</label>
+        <input name="timelineClaimNumber" value="@Model.TimelineClaimNumber" class="form-control" placeholder="CLM-..." />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-outline-secondary" type="submit">Load Timeline</button>
+    </div>
+</form>
+
+@if (Model.Timeline.Any())
+{
+    <div class="card p-3 mb-3">
+        <h5>Claim Timeline</h5>
+        <ul class="list-group list-group-flush">
+            @foreach (var eventItem in Model.Timeline)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div>
+                        <div><strong>@eventItem.EventType</strong> - @eventItem.Description</div>
+                        <small class="text-muted">Actor: @eventItem.ActorUserId</small>
+                    </div>
+                    <small>@eventItem.EventAtUtc.ToString("yyyy-MM-dd HH:mm")</small>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="card p-3 mb-3">
+    <h5>New Claim Intake</h5>
+    <form asp-action="Create" method="post" class="row g-2" novalidate>
+        @Html.AntiForgeryToken()
+        <div class="col-md-3">
+            <label asp-for="PolicyNumber" class="form-label"></label>
+            <input asp-for="PolicyNumber" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label asp-for="IncidentDate" class="form-label"></label>
+            <input asp-for="IncidentDate" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label asp-for="ClaimType" class="form-label"></label>
+            <input asp-for="ClaimType" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label asp-for="ClaimedAmount" class="form-label"></label>
+            <input asp-for="ClaimedAmount" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="EvidenceUrl" class="form-label"></label>
+            <input asp-for="EvidenceUrl" class="form-control" placeholder="https://..." />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary" type="submit">Create Claim</button>
+        </div>
+    </form>
+</div>
+
+<div class="card p-3 mb-3">
+    <h5>Assign Claim</h5>
+    <form asp-action="Assign" method="post" class="row g-2" novalidate>
+        @Html.AntiForgeryToken()
+        <div class="col-md-3">
+            <label asp-for="AssignClaimNumber" class="form-label">Claim Number</label>
+            <input asp-for="AssignClaimNumber" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="AssignAdjusterUserId" class="form-label">Adjuster User Id</label>
+            <input asp-for="AssignAdjusterUserId" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="AssignNote" class="form-label">Assignment Note</label>
+            <input asp-for="AssignNote" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-outline-primary" type="submit">Assign</button>
+        </div>
+    </form>
+</div>
+
+<div class="card p-3 mb-3">
+    <h5>Review Decision</h5>
+    <form asp-action="Review" method="post" class="row g-2" novalidate>
+        @Html.AntiForgeryToken()
+        <div class="col-md-3">
+            <label asp-for="ReviewClaimNumber" class="form-label">Claim Number</label>
+            <input asp-for="ReviewClaimNumber" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="ReviewAction" class="form-label">Action</label>
+            <select asp-for="ReviewAction" class="form-select">
+                <option value="under-review">under-review</option>
+                <option value="request-documents">request-documents</option>
+                <option value="approve">approve</option>
+                <option value="reject">reject</option>
+                <option value="close">close</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="ReviewApprovedAmount" class="form-label">Approved Amount</label>
+            <input asp-for="ReviewApprovedAmount" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="ReviewReason" class="form-label">Reason</label>
+            <input asp-for="ReviewReason" class="form-control" />
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <button class="btn btn-outline-success" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>Claim Number</th>
+                <th>Policy</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Fraud</th>
+                <th>Adjuster</th>
+                <th>Claimed</th>
+                <th>Approved</th>
+                <th>Decision</th>
+                <th>SLA</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Claims.Any())
+            {
+                <tr>
+                    <td colspan="10" class="text-muted">No claims found.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Claims)
+                {
+                    <tr>
+                        <td>@item.ClaimNumber</td>
+                        <td>@item.PolicyNumber</td>
+                        <td>@item.ClaimType</td>
+                        <td>@item.Status</td>
+                        <td>
+                            @if (item.IsFraudRisk)
+                            {
+                                <span class="badge bg-danger">High (@item.FraudScore)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Low (@item.FraudScore)</span>
+                            }
+                        </td>
+                        <td>@item.AssignedAdjusterId</td>
+                        <td>@item.ClaimedAmount.ToString("N2")</td>
+                        <td>@(item.ApprovedAmount?.ToString("N2") ?? "-")</td>
+                        <td>@item.DecisionReason</td>
+                        <td>
+                            @if (item.IsSlaBreached)
+                            {
+                                <span class="badge bg-warning text-dark">Breached (@item.AgeHours h)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark">@item.AgeHours h</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

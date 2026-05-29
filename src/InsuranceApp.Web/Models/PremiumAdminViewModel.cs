@@ -17,6 +17,12 @@ public sealed class PremiumAdminViewModel
 
     public string Provider { get; set; } = "MTN_MOMO";
     public string PaymentChannel { get; set; } = "MoMo";
+    public string WebhookEventId { get; set; } = string.Empty;
+    public string WebhookTransactionReference { get; set; } = string.Empty;
+    public string WebhookStatus { get; set; } = "success";
+    public DateTime ReconciliationFromUtc { get; set; } = DateTime.UtcNow.Date.AddDays(-7);
+    public DateTime ReconciliationToUtc { get; set; } = DateTime.UtcNow.Date;
 
     public IReadOnlyCollection<PremiumCollectionItemResponse> Items { get; set; } = Array.Empty<PremiumCollectionItemResponse>();
+    public PremiumReconciliationSummaryResponse? Reconciliation { get; set; }
 }

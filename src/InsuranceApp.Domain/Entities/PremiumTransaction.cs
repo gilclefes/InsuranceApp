@@ -12,6 +12,9 @@ public class PremiumTransaction : BaseAuditableEntity
     public string PaymentChannel { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+    public string IdempotencyKey { get; set; } = string.Empty;
+    public string ProviderReference { get; set; } = string.Empty;
+    public string FailureReason { get; set; } = string.Empty;
     public DateTime DueDateUtc { get; set; }
     public DateTime? ProcessedAtUtc { get; set; }
     public int RetryCount { get; set; }

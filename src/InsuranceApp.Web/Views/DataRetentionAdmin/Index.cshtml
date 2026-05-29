@@ -1,0 +1,37 @@
+@model DataRetentionAdminViewModel
+@{
+    ViewData["Title"] = "Data Retention Admin";
+}
+
+<h2>Data Retention and Privacy Controls</h2>
+<p class="text-muted">Preview and execute retention actions for OTP, tokens, audit PII, claim notifications, and webhook payloads.</p>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+
+@if (Model.Summary is null)
+{
+    <div class="alert alert-info">No retention summary available.</div>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h5>Retention Summary</h5>
+        <div class="text-muted mb-2">Generated: @Model.Summary.GeneratedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</div>
+        <div class="row g-2">
+            <div class="col-md-6">OTP delete candidates (@Model.Summary.OtpRetentionDays days): <strong>@Model.Summary.OtpChallengesEligibleForDeletion</strong></div>
+            <div class="col-md-6">Refresh token delete candidates (@Model.Summary.RefreshTokenRetentionDays days): <strong>@Model.Summary.RefreshTokensEligibleForDeletion</strong></div>
+            <div class="col-md-6">Identity audit anonymize candidates (@Model.Summary.IdentityAuditPiiRetentionDays days): <strong>@Model.Summary.IdentityAuditRowsEligibleForAnonymization</strong></div>
+            <div class="col-md-6">Claim notification anonymize candidates (@Model.Summary.ClaimNotificationPiiRetentionDays days): <strong>@Model.Summary.ClaimNotificationsEligibleForAnonymization</strong></div>
+            <div class="col-md-6">Premium webhook payload redaction candidates (@Model.Summary.WebhookPayloadRetentionDays days): <strong>@Model.Summary.PremiumWebhookPayloadsEligibleForRedaction</strong></div>
+            <div class="col-md-6">Payout webhook payload redaction candidates (@Model.Summary.WebhookPayloadRetentionDays days): <strong>@Model.Summary.PayoutWebhookPayloadsEligibleForRedaction</strong></div>
+        </div>
+    </div>
+
+    <form asp-action="Run" method="post" class="mb-3">
+        @Html.AntiForgeryToken()
+        <button class="btn btn-danger" type="submit">Run Retention Now</button>
+    </form>
+}

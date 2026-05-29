@@ -154,6 +154,10 @@ Progress update (29 May 2026):
 - Added MVC policy admin forms for creating policies from quotes and running endorsement/cancellation/document actions.
 - Added MVC premium admin forms for mandate capture, schedule setup, due-run trigger, retry trigger, and policy transaction history.
 - Added focused API contract and service tests for premium collection behavior.
+- Added idempotent premium webhook processing endpoint and persistence logs (`EventId` uniqueness) for duplicate-event safety.
+- Added premium reconciliation summary endpoint and MVC summary panel with exception visibility.
+- Updated background worker to execute due and retry premium collection cycles alongside renewal reminders.
+- Sprint 4 stories are now closed with zero carry-over.
 
 Stories:
 - MoMo mandate capture and token references (13 SP)
@@ -170,6 +174,19 @@ Acceptance focus:
 ## Sprint 5: Claims Intake and Adjudication
 Goal: Enable customer claims flow and internal review lifecycle.
 
+Progress update (29 May 2026):
+- Added claims API endpoints for claim intake, retrieval, filtered queue listing, adjuster assignment, and review action transitions.
+- Added claim workflow persistence fields for evidence URL, adjuster assignment, and decision metadata.
+- Added MVC Claims Admin page for claim capture, assignment, and review/adjudication actions.
+- Added focused API contract and service tests for claims workflow behavior.
+- Applied migration `AddClaimsWorkflowFields` and passed full regression tests.
+- Added fraud baseline scoring with claim risk flags and reasons during intake.
+- Added claim timeline event tracking for create, assign, and review transitions.
+- Added claim notification persistence for customer and risk-team communication baseline.
+- Added claims SLA dashboard API and MVC panel with breach visibility and open-queue metrics.
+- Applied migration `AddClaimsFraudTimelineAndSla` and passed full regression tests (58/58).
+- Sprint 5 stories are now closed with zero carry-over.
+
 Stories:
 - Claims initiation and evidence upload (13 SP)
 - Claims assignment and adjuster work queue (8 SP)
@@ -184,6 +201,28 @@ Acceptance focus:
 
 ## Sprint 6: Payouts, Compliance, and Hardening
 Goal: Complete disbursement workflow, compliance reporting, and operational hardening.
+
+Progress update (29 May 2026):
+- Added payout API endpoints for payout initiation, payout retrieval/listing, reconciliation run, and webhook status processing.
+- Added payout service baseline with claim-status synchronization on disbursement and failure handling.
+- Added payout webhook idempotency logs and payout transaction reconciliation metadata.
+- Added MVC Payout Admin page for payout initiation, reconciliation trigger, and webhook simulation.
+- Applied migration `AddPayoutWorkflowAndReconciliation` and passed full regression tests (63/63).
+- Added compliance summary reporting service aggregating premiums, payouts, claims/fraud, SLA breaches, and identity audit outcomes.
+- Added admin compliance API endpoints for summary retrieval and CSV export.
+- Added MVC Compliance Admin dashboard with date filtering, KPI cards, and exceptions table.
+- Added API contract and service-level tests for compliance reporting and passed full regression tests (67/67).
+- Added privacy/data-retention service with policy-driven cleanup of expired OTP and refresh token records.
+- Added anonymization workflow for aged identity audit PII and claim notifications.
+- Added webhook payload redaction workflow for aged premium and payout webhook logs.
+- Added admin data-retention API endpoints for preview and execution plus MVC Data Retention admin page.
+- Added API contract and service-level tests for retention controls and passed full regression tests (71/71).
+- Added operations hardening readiness service with database probe, queue-state metrics, and retention candidate visibility.
+- Added failover drill execution service with step-level pass/fail reporting for connectivity and critical reads.
+- Added admin operations API endpoints and MVC Operations dashboard with drill trigger and step report table.
+- Added scheduled daily retention execution in worker process with structured run metrics logging.
+- Added API contract and service-level tests for operations hardening and passed full regression tests (75/75).
+- Sprint 6 stories are now closed with release-candidate handoff and zero carry-over for Release 1 scope.
 
 Stories:
 - Claim payout initiation and status reconciliation (13 SP)

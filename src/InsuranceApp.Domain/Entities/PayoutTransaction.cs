@@ -8,9 +8,13 @@ public class PayoutTransaction : BaseAuditableEntity
     public long Id { get; set; }
     public long ClaimId { get; set; }
     public string PayoutReference { get; set; } = string.Empty;
+    public string IdempotencyKey { get; set; } = string.Empty;
+    public string ProviderReference { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Initiated;
     public string DestinationChannel { get; set; } = string.Empty;
+    public string DestinationAccount { get; set; } = string.Empty;
+    public string FailureReason { get; set; } = string.Empty;
     public DateTime? DisbursedAtUtc { get; set; }
 
     public Claim? Claim { get; set; }

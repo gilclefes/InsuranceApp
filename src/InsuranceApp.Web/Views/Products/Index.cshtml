@@ -1,0 +1,38 @@
+@model ProductCatalogViewModel
+@{
+    ViewData["Title"] = "Insurance Products";
+}
+
+<h2>Browse insurance products</h2>
+<p class="text-muted">Choose a product to get a quote. Available products: Motor, Education, Funeral and Custom (BRD §1.4).</p>
+
+<div class="row g-3">
+    @if (!Model.Products.Any())
+    {
+        <div class="col-12">
+            <div class="alert alert-warning">No active products are available right now. Please check back later.</div>
+        </div>
+    }
+    else
+    {
+        foreach (var product in Model.Products)
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Name</h5>
+                        <h6 class="card-subtitle text-muted mb-2">@product.ProductType</h6>
+                        <p class="card-text">
+                            Base rate: <strong>@(product.BaseRate.ToString("P2"))</strong><br />
+                            Minimum premium: <strong>@product.MinPremium.ToString("N2") @product.CurrencyCode</strong>
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-code="@product.ProductCode">Details</a>
+                            <a class="btn btn-primary" asp-controller="Quote" asp-action="Start" asp-route-code="@product.ProductCode">Get Quote</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

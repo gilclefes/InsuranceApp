@@ -1,0 +1,35 @@
+@model MyPaymentsViewModel
+@{
+    ViewData["Title"] = "My Payments";
+}
+
+<h2>Premium payments</h2>
+<p class="text-muted">Mobile money and bank deductions linked to your active policies.</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Reference</th><th>Policy</th><th>Amount</th><th>Channel</th><th>Status</th><th>Due</th><th>Processed</th><th>Retries</th></tr>
+    </thead>
+    <tbody>
+        @if (!Model.Payments.Any())
+        {
+            <tr><td colspan="8" class="text-muted">No payments recorded yet.</td></tr>
+        }
+        else
+        {
+            foreach (var pay in Model.Payments)
+            {
+                <tr>
+                    <td>@pay.TransactionReference</td>
+                    <td>@pay.PolicyNumber</td>
+                    <td>@pay.Amount.ToString("N2") @pay.CurrencyCode</td>
+                    <td>@pay.PaymentChannel (@pay.Provider)</td>
+                    <td>@pay.Status</td>
+                    <td>@pay.DueDateUtc.ToString("yyyy-MM-dd")</td>
+                    <td>@(pay.ProcessedAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                    <td>@pay.RetryCount</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

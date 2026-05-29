@@ -20,10 +20,33 @@
         <label class="form-label">Policy Number</label>
         <input name="policyNumber" value="@Model.PolicyNumber" class="form-control" />
     </div>
+    <div class="col-md-3">
+        <label class="form-label">From</label>
+        <input name="fromUtc" type="date" value="@Model.ReconciliationFromUtc.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">To</label>
+        <input name="toUtc" type="date" value="@Model.ReconciliationToUtc.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
     <div class="col-md-2 d-flex align-items-end">
         <button type="submit" class="btn btn-outline-primary">Load</button>
     </div>
 </form>
+
+@if (Model.Reconciliation is not null)
+{
+    <div class="card p-3 mb-3">
+        <h5>Reconciliation Summary</h5>
+        <div class="row g-2">
+            <div class="col-md-2"><strong>Total:</strong> @Model.Reconciliation.TotalTransactions</div>
+            <div class="col-md-2"><strong>Success:</strong> @Model.Reconciliation.SuccessCount</div>
+            <div class="col-md-2"><strong>Failed:</strong> @Model.Reconciliation.FailedCount</div>
+            <div class="col-md-2"><strong>Pending:</strong> @Model.Reconciliation.PendingCount</div>
+            <div class="col-md-2"><strong>Total Amt:</strong> @Model.Reconciliation.TotalAmount.ToString("N2")</div>
+            <div class="col-md-2"><strong>Failed Amt:</strong> @Model.Reconciliation.FailedAmount.ToString("N2")</div>
+        </div>
+    </div>
+}
 
 <form asp-action="CreateMandate" method="post" class="card p-3 mb-3" novalidate>
     @Html.AntiForgeryToken()
@@ -92,6 +115,37 @@
         <button type="submit" class="btn btn-outline-dark">Retry Failed</button>
     </form>
 </div>
+
+<form asp-action="ProcessWebhook" method="post" class="card p-3 mb-3" novalidate>
+    @Html.AntiForgeryToken()
+    <h5>Webhook Processing (Idempotent)</h5>
+    <p class="text-muted mb-2">Use this form to simulate provider webhook callbacks and verify duplicate-event handling.</p>
+    <div class="row g-2">
+        <div class="col-md-3">
+            <label asp-for="WebhookEventId" class="form-label">Event ID</label>
+            <input asp-for="WebhookEventId" class="form-control" placeholder="EVT-..." />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="WebhookTransactionReference" class="form-label">Transaction Reference</label>
+            <input asp-for="WebhookTransactionReference" class="form-control" placeholder="COL-POL-..." />
+        </div>
+        <div class="col-md-2">
+            <label asp-for="WebhookStatus" class="form-label">Status</label>
+            <select asp-for="WebhookStatus" class="form-select">
+                <option value="success">success</option>
+                <option value="failed">failed</option>
+                <option value="processing">processing</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="Provider" class="form-label">Provider</label>
+            <input asp-for="Provider" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-outline-success w-100">Process Webhook</button>
+        </div>
+    </div>
+</form>
 
 <div class="table-responsive">
     <table class="table table-striped table-sm">

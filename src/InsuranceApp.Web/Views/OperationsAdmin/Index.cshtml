@@ -1,0 +1,73 @@
+@model OperationsAdminViewModel
+@{
+    ViewData["Title"] = "Operations Hardening";
+}
+
+<h2>Operations Hardening</h2>
+<p class="text-muted">Review failover readiness and execute a controlled failover drill.</p>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-info">@success</div>
+}
+
+@if (Model.Readiness is null)
+{
+    <div class="alert alert-warning">Readiness metrics are unavailable.</div>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h5>Readiness Snapshot</h5>
+        <div class="row g-2">
+            <div class="col-md-4"><strong>DB Healthy:</strong> @Model.Readiness.DatabaseConnectivityHealthy</div>
+            <div class="col-md-4"><strong>DB Probe (ms):</strong> @Model.Readiness.DatabaseProbeLatencyMs</div>
+            <div class="col-md-4"><strong>Ready For Drill:</strong> @Model.Readiness.ReadyForFailoverDrill</div>
+            <div class="col-md-4"><strong>Pending Premium:</strong> @Model.Readiness.PendingPremiumCollections</div>
+            <div class="col-md-4"><strong>Failed Premium:</strong> @Model.Readiness.FailedPremiumCollections</div>
+            <div class="col-md-4"><strong>Pending Payout:</strong> @Model.Readiness.PendingPayouts</div>
+            <div class="col-md-4"><strong>Failed Payout:</strong> @Model.Readiness.FailedPayouts</div>
+            <div class="col-md-4"><strong>Open Claims:</strong> @Model.Readiness.OpenClaims</div>
+            <div class="col-md-4"><strong>Retention Candidates:</strong> @Model.Readiness.RetentionCleanupCandidates</div>
+        </div>
+    </div>
+}
+
+<form asp-action="RunDrill" method="post" class="mb-3">
+    @Html.AntiForgeryToken()
+    <button class="btn btn-dark" type="submit">Run Failover Drill</button>
+</form>
+
+@if (Model.LastDrillResult is not null)
+{
+    <div class="card p-3">
+        <h5>Last Drill Result</h5>
+        <div><strong>Started:</strong> @Model.LastDrillResult.StartedAtUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC</div>
+        <div><strong>Completed:</strong> @Model.LastDrillResult.CompletedAtUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC</div>
+        <div><strong>Successful:</strong> @Model.LastDrillResult.Successful</div>
+
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Success</th>
+                        <th>Message</th>
+                        <th>Duration (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var step in Model.LastDrillResult.Steps)
+                    {
+                        <tr>
+                            <td>@step.StepName</td>
+                            <td>@step.Success</td>
+                            <td>@step.Message</td>
+                            <td>@step.DurationMs</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

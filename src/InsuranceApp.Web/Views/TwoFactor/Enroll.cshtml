@@ -1,0 +1,34 @@
+@model InsuranceApp.Web.Models.TwoFactorEnrollViewModel
+@{
+    ViewData["Title"] = "Enable two-factor authentication";
+}
+
+<h2>Enable two-factor authentication</h2>
+
+<ol>
+    <li>Install an authenticator app (Microsoft Authenticator, Google Authenticator, Authy).</li>
+    <li>Scan the QR code below, or enter the shared key manually.</li>
+    <li>Enter the 6-digit code shown in the app to confirm enrollment.</li>
+</ol>
+
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Shared key:</strong> <code>@Model.SharedKey</code></p>
+        <p><strong>Authenticator URI:</strong></p>
+        <textarea class="form-control" rows="3" readonly>@Model.AuthenticatorUri</textarea>
+        <p class="text-muted small mt-2">Paste this URI into your authenticator app if scanning is not available.</p>
+    </div>
+    <div class="col-md-6">
+        <form method="post">
+            <input type="hidden" asp-for="SharedKey" />
+            <input type="hidden" asp-for="AuthenticatorUri" />
+            <div class="mb-3">
+                <label asp-for="VerificationCode" class="form-label"></label>
+                <input asp-for="VerificationCode" class="form-control" autocomplete="off" inputmode="numeric" />
+                <span asp-validation-for="VerificationCode" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify and enable</button>
+            <a asp-action="Status" class="btn btn-link">Cancel</a>
+        </form>
+    </div>
+</div>

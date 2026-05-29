@@ -1,0 +1,31 @@
+@model ProductDetailsViewModel
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+
+<a asp-action="Index" class="text-decoration-none">&larr; Back to products</a>
+<h2 class="mt-2">@Model.Product.Name</h2>
+<p class="text-muted">@Model.Product.ProductType policy. Currency: @Model.Product.CurrencyCode.</p>
+
+<dl class="row">
+    <dt class="col-sm-3">Product code</dt><dd class="col-sm-9">@Model.Product.ProductCode</dd>
+    <dt class="col-sm-3">Base rate</dt><dd class="col-sm-9">@Model.Product.BaseRate.ToString("P2")</dd>
+    <dt class="col-sm-3">Minimum premium</dt><dd class="col-sm-9">@Model.Product.MinPremium.ToString("N2") @Model.Product.CurrencyCode</dd>
+</dl>
+
+<h4>Optional riders</h4>
+@if (!Model.Riders.Any())
+{
+    <p class="text-muted">No optional riders are configured for this product.</p>
+}
+else
+{
+    <ul>
+        @foreach (var rider in Model.Riders)
+        {
+            <li><strong>@rider.Name</strong> &mdash; @rider.AdjustmentType @rider.AdjustmentValue</li>
+        }
+    </ul>
+}
+
+<a class="btn btn-primary mt-3" asp-controller="Quote" asp-action="Start" asp-route-code="@Model.Product.ProductCode">Get a quote</a>

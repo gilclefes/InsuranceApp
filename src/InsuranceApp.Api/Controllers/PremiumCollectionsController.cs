@@ -60,4 +60,28 @@ public class PremiumCollectionsController(IPremiumCollectionService premiumColle
         var result = await premiumCollectionService.RetryFailedCollectionsAsync(cancellationToken);
         return Ok(result);
     }
+
+    [AllowAnonymous]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("webhook")]
+    [HttpPost("webhooks/provider")]
+    public async Task<IActionResult> ProcessWebhook([FromBody] PremiumCollectionWebhookRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await premiumCollectionService.ProcessWebhookAsync(request, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("reconciliation")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Reconciliation([FromQuery] DateTime? fromUtc, [FromQuery] DateTime? toUtc, CancellationToken cancellationToken)
+    {
+        var result = await premiumCollectionService.GetReconciliationSummaryAsync(fromUtc, toUtc, cancellationToken);
+        return Ok(result);
+    }
 }

@@ -1,0 +1,98 @@
+@model CustomerDashboardViewModel
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<h2>Welcome, @Model.CustomerName</h2>
+
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["KycStatus"] is string kyc)
+{
+    <div class="alert @(string.Equals(kyc, "Verified", StringComparison.OrdinalIgnoreCase) ? "alert-success" : "alert-warning")">
+        KYC status: <strong>@kyc</strong> @TempData["KycMessage"]
+    </div>
+}
+
+@if (!Model.ProfileComplete)
+{
+    <div class="alert alert-warning">
+        Your customer profile is not yet set up. Buy a policy or complete onboarding to use all features.
+        <a class="btn btn-sm btn-primary ms-2" asp-controller="Products" asp-action="Index">Browse products</a>
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-bg-light"><div class="card-body">
+                <div class="text-muted small">Active policies</div>
+                <div class="display-6">@Model.ActivePolicies</div>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-light"><div class="card-body">
+                <div class="text-muted small">Open claims</div>
+                <div class="display-6">@Model.OpenClaims</div>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-light"><div class="card-body">
+                <div class="text-muted small">Outstanding premium (GHS)</div>
+                <div class="display-6">@Model.OutstandingPremium.ToString("N2")</div>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-light"><div class="card-body">
+                <div class="text-muted small">KYC</div>
+                <div class="h4">@(Model.KycVerified ? "Verified" : "Pending")</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <h5>Recent policies</h5>
+            <ul class="list-group">
+                @if (!Model.RecentPolicies.Any())
+                {
+                    <li class="list-group-item text-muted">No policies yet. <a asp-controller="Products" asp-action="Index">Browse products</a>.</li>
+                }
+                else
+                {
+                    foreach (var p in Model.RecentPolicies)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>@p.PolicyNumber</strong> &mdash; @p.ProductType (@p.Status)</span>
+                            <span>@p.PremiumAmount.ToString("N2") @p.CurrencyCode</span>
+                        </li>
+                    }
+                }
+            </ul>
+            <a class="btn btn-link" asp-action="Policies">View all policies</a>
+        </div>
+        <div class="col-md-6">
+            <h5>Recent claims</h5>
+            <ul class="list-group">
+                @if (!Model.RecentClaims.Any())
+                {
+                    <li class="list-group-item text-muted">No claims filed.</li>
+                }
+                else
+                {
+                    foreach (var c in Model.RecentClaims)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>@c.ClaimNumber</strong> &mdash; @c.ClaimType (@c.Status)</span>
+                            <span>@c.ClaimedAmount.ToString("N2")</span>
+                        </li>
+                    }
+                }
+            </ul>
+            <a class="btn btn-link" asp-action="Claims">View all claims</a>
+            <a class="btn btn-outline-primary float-end" asp-action="NewClaim">File a new claim</a>
+        </div>
+    </div>
+}

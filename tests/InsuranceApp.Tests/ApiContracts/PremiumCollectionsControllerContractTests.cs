@@ -31,9 +31,30 @@ public class PremiumCollectionsControllerContractTests
         Assert.IsType<OkObjectResult>(result);
     }
 
+    [Fact]
+    public async Task ProcessWebhook_ShouldReturnBadRequest_WhenInvalid()
+    {
+        var controller = new PremiumCollectionsController(new StubPremiumCollectionService
+        {
+            WebhookException = new InvalidOperationException("Webhook signature is required.")
+        });
+
+        var result = await controller.ProcessWebhook(new PremiumCollectionWebhookRequest(), CancellationToken.None);
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Reconciliation_ShouldReturnOk()
+    {
+        var controller = new PremiumCollectionsController(new StubPremiumCollectionService());
+        var result = await controller.Reconciliation(null, null, CancellationToken.None);
+        Assert.IsType<OkObjectResult>(result);
+    }
+
     private sealed class StubPremiumCollectionService : IPremiumCollectionService
     {
         public Exception? CreateException { get; set; }
+        public Exception? WebhookException { get; set; }
 
         public Task<PremiumCollectionItemResponse> CreateMandateAsync(CreatePremiumMandateRequest request, CancellationToken cancellationToken = default)
         {
@@ -56,5 +77,18 @@ public class PremiumCollectionsControllerContractTests
 
         public Task<PremiumCollectionRunResponse> RetryFailedCollectionsAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(new PremiumCollectionRunResponse());
+
+        public Task<PremiumCollectionWebhookResponse> ProcessWebhookAsync(PremiumCollectionWebhookRequest request, CancellationToken cancellationToken = default)
+        {
+            if (WebhookException is not null)
+            {
+                throw WebhookException;
+            }
+
+            return Task.FromResult(new PremiumCollectionWebhookResponse());
+        }
+
+        public Task<PremiumReconciliationSummaryResponse> GetReconciliationSummaryAsync(DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
+            => Task.FromResult(new PremiumReconciliationSummaryResponse());
     }
 }

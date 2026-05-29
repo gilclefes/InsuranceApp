@@ -1,0 +1,31 @@
+@model QuoteResultViewModel
+@{
+    ViewData["Title"] = "Quote Result";
+}
+
+<h2>Your quote</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">@Model.ProductName</h5>
+        <p class="card-text">
+            Reference: <code>@Model.Quote.QuoteReference</code><br />
+            Base premium: @Model.Quote.BasePremium.ToString("N2") @Model.Quote.CurrencyCode<br />
+            <strong>Total premium: @Model.Quote.TotalPremium.ToString("N2") @Model.Quote.CurrencyCode</strong><br />
+            Valid until: @Model.Quote.ValidUntilUtc.ToString("yyyy-MM-dd HH:mm 'UTC'")
+        </p>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="btn btn-success" asp-controller="Customer" asp-action="ConfirmPolicy" asp-route-reference="@Model.Quote.QuoteReference">
+                Purchase policy
+            </a>
+        }
+        else
+        {
+            <a class="btn btn-success" asp-controller="Account" asp-action="Register">Create account to purchase</a>
+            <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("ConfirmPolicy", "Customer", new { reference = Model.Quote.QuoteReference })">Sign in</a>
+        }
+        <a class="btn btn-outline-primary" asp-controller="Products" asp-action="Index">Browse other products</a>
+    </div>
+</div>

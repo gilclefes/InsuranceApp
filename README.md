@@ -8,6 +8,11 @@ Digital Insurance Management Platform scaffold for Ghana, aligned to ASP.NET 10,
 - Sprint 0/1 detailed stories and API contracts: `Sprint0_1_UserStories_API_Contracts.md`
 - Delivery tracking template: `Implementation_Status_Tracker.md`
 - Sprint 3 completion handoff: `Sprint3_Completion_Handoff.md`
+- Sprint 4 completion handoff: `Sprint4_Completion_Handoff.md`
+- Sprint 5 completion handoff: `Sprint5_Completion_Handoff.md`
+- Sprint 6 completion handoff: `Sprint6_Completion_Handoff.md`
+- Release 1 candidate notes: `Release1_Release_Notes.md`
+- Release 1 commit plan: `Release1_Commit_Plan.md`
 
 ## Solution Structure
 - `src/InsuranceApp.Web`: ASP.NET MVC web portal
@@ -64,6 +69,26 @@ Digital Insurance Management Platform scaffold for Ghana, aligned to ASP.NET 10,
 - `GET /api/v1/premium-collections/{policyNumber}`
 - `POST /api/v1/premium-collections/run-due` (Admin)
 - `POST /api/v1/premium-collections/retry-failed` (Admin)
+- `POST /api/v1/premium-collections/webhooks/provider` (AllowAnonymous, signature required)
+- `GET /api/v1/premium-collections/reconciliation?fromUtc=&toUtc=` (Admin)
+- `POST /api/v1/claims`
+- `GET /api/v1/claims/{claimNumber}`
+- `GET /api/v1/claims?status=&assignedAdjusterId=&policyNumber=`
+- `POST /api/v1/claims/{claimNumber}/assign` (Admin/Agent)
+- `POST /api/v1/claims/{claimNumber}/review` (Admin/Agent)
+- `GET /api/v1/claims/{claimNumber}/timeline`
+- `GET /api/v1/claims/sla-dashboard?assignedAdjusterId=` (Admin/Agent)
+- `POST /api/v1/payouts/initiate` (Admin/Agent)
+- `GET /api/v1/payouts/{payoutReference}`
+- `GET /api/v1/payouts?status=&claimNumber=&fromUtc=&toUtc=`
+- `POST /api/v1/payouts/reconcile/run` (Admin)
+- `POST /api/v1/payouts/webhooks/provider` (AllowAnonymous, signature required)
+- `GET /api/v1/admin/compliance-reports/summary`
+- `GET /api/v1/admin/compliance-reports/summary/export`
+- `GET /api/v1/admin/data-retention/summary`
+- `POST /api/v1/admin/data-retention/run`
+- `GET /api/v1/admin/operations-hardening/readiness`
+- `POST /api/v1/admin/operations-hardening/failover-drill/run`
 - `GET /api/v1/admin/products`
 - `POST /api/v1/admin/products`
 - `PUT /api/v1/admin/products/{id}`
@@ -95,6 +120,13 @@ Digital Insurance Management Platform scaffold for Ghana, aligned to ASP.NET 10,
 - Login page: `/Account/Login` (cookie-based session for MVC).
 - Home page now routes users to Policy Admin, Premium Admin, and Product Admin modules.
 - Default seeded admin credentials for local development can be configured via `SeedAdmin` settings in web appsettings.
+- Premium Admin page includes reconciliation summary and webhook simulation form to validate idempotency behavior.
+- Claims Admin page supports intake, assignment, and review decisions for adjuster workflows.
+- Claims Admin includes SLA dashboard metrics and timeline lookup for end-to-end claim visibility.
+- Payout Admin supports payout initiation, reconciliation runs, and webhook simulation for payout status updates.
+- Compliance Admin provides operational compliance KPIs and exception export across premiums, payouts, claims, and identity audit logs.
+- Data Retention Admin provides retention preview and one-click execution for cleanup, anonymization, and webhook payload redaction policies.
+- Operations Admin provides readiness snapshots and controlled failover drill execution with step-level outcomes.
 
 ## Next Engineering Steps
 - Integrate real NIA adapter and OTP provider.

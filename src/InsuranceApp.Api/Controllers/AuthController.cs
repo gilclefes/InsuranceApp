@@ -2,11 +2,13 @@ using InsuranceApp.Application.Interfaces;
 using InsuranceApp.Contracts.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace InsuranceApp.Api.Controllers;
 
 [ApiController]
+[EnableRateLimiting("auth")]
 [Route("api/v1/auth")]
 public class AuthController(IAuthService authService, IIdentityAuditLogger auditLogger) : ControllerBase
 {

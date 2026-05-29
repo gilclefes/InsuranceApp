@@ -5,6 +5,9 @@ using InsuranceApp.Domain.Enums;
 using InsuranceApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace InsuranceApp.Infrastructure.Policies;
 
@@ -247,15 +250,46 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
 
     private static byte[] BuildPolicySchedulePdfBytes(Policy policy, QuoteRecord quote)
     {
-        var scheduleText =
-            $"POLICY SCHEDULE\n" +
-            $"Policy Number: {policy.PolicyNumber}\n" +
-            $"Product Code: {quote.ProductCode}\n" +
-            $"Premium: {policy.CurrencyCode} {policy.PremiumAmount:F2}\n" +
-            $"Inception: {policy.InceptionDate:yyyy-MM-dd}\n" +
-            $"Expiry: {policy.ExpiryDate:yyyy-MM-dd}\n";
+        QuestPDF.Settings.License = LicenseType.Community;
 
-        return Encoding.UTF8.GetBytes(scheduleText);
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Size(PageSizes.A4);
+                page.DefaultTextStyle(t => t.FontSize(11));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().Text("InsuranceApp – Policy Schedule").SemiBold().FontSize(18).FontColor(Colors.Blue.Darken3);
+                    col.Item().Text($"Issued: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC").FontSize(9).FontColor(Colors.Grey.Darken1);
+                });
+
+                page.Content().PaddingVertical(15).Column(col =>
+                {
+                    col.Spacing(8);
+                    col.Item().Text(t => { t.Span("Policy Number: ").SemiBold(); t.Span(policy.PolicyNumber); });
+                    col.Item().Text(t => { t.Span("Product Code: ").SemiBold(); t.Span(quote.ProductCode); });
+                    col.Item().Text(t => { t.Span("Coverage Type: ").SemiBold(); t.Span(policy.CoverageType); });
+                    col.Item().Text(t => { t.Span("Premium: ").SemiBold(); t.Span($"{policy.CurrencyCode} {policy.PremiumAmount:F2}"); });
+                    col.Item().Text(t => { t.Span("Inception: ").SemiBold(); t.Span($"{policy.InceptionDate:yyyy-MM-dd}"); });
+                    col.Item().Text(t => { t.Span("Expiry: ").SemiBold(); t.Span($"{policy.ExpiryDate:yyyy-MM-dd}"); });
+                    col.Item().PaddingTop(20).Text("Terms and Conditions").SemiBold();
+                    col.Item().Text("This schedule must be read with the master policy wording. Premiums are payable per the agreed mandate. Cover lapses on non-payment beyond the grace period.").FontSize(9).FontColor(Colors.Grey.Darken2);
+                });
+
+                page.Footer().AlignCenter().Text(t =>
+                {
+                    t.Span("Page ").FontSize(9);
+                    t.CurrentPageNumber().FontSize(9);
+                    t.Span(" of ").FontSize(9);
+                    t.TotalPages().FontSize(9);
+                });
+            });
+        });
+
+        return document.GeneratePdf();
     }
 
     private async Task CreateNotificationsAsync(Policy policy, Customer customer, string templateKey, CancellationToken cancellationToken)
