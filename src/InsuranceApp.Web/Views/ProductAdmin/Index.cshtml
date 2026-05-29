@@ -1,0 +1,33 @@
+@model IReadOnlyCollection<InsuranceApp.Domain.Entities.ProductDefinition>
+@{
+    ViewData["Title"] = "Product Admin";
+}
+
+<h2>Product Configuration</h2>
+<p>Manage risk rules and riders for configured products.</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var p in Model)
+    {
+        <tr>
+            <td>@p.ProductCode</td>
+            <td>@p.Name</td>
+            <td>@p.ProductType</td>
+            <td>@(p.IsActive ? "Active" : "Inactive")</td>
+            <td>
+                <a class="btn btn-sm btn-primary" asp-controller="ProductAdmin" asp-action="Configure" asp-route-id="@p.Id">Configure</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

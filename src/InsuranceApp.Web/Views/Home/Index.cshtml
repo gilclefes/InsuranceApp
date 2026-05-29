@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Insurance Operations";
+}
+
+<div class="row g-3">
+    <div class="col-12">
+        <h1 class="display-6">InsuranceApp Operations Portal</h1>
+        <p class="text-muted">Manage policy issuance, premium collections, and product setup from one workspace.</p>
+    </div>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Policy Admin</h5>
+                    <p class="card-text">Create policies from quotes, monitor policy status, and run lifecycle actions.</p>
+                    <a class="btn btn-primary" asp-controller="PolicyAdmin" asp-action="Index">Open Policy Admin</a>
+                </div>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Premium Admin</h5>
+                        <p class="card-text">Capture mandates, schedule premium pulls, and run due/retry collection cycles.</p>
+                        <a class="btn btn-outline-primary" asp-controller="PremiumAdmin" asp-action="Index">Open Premium Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Product Admin</h5>
+                        <p class="card-text">Maintain products, risk rules, and riders used by quote and issuance workflows.</p>
+                        <a class="btn btn-outline-primary" asp-controller="ProductAdmin" asp-action="Index">Open Product Admin</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info">
+                Login is required to access admin and operations forms.
+                <a asp-controller="Account" asp-action="Login" class="alert-link">Sign in</a>
+            </div>
+        </div>
+    }
+</div>

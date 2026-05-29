@@ -1,0 +1,101 @@
+@model InsuranceApp.Web.Models.ProductConfigViewModel
+@{
+    ViewData["Title"] = "Configure Product";
+}
+
+<h2>Configure @Model.Product.Name (@Model.Product.ProductCode)</h2>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Risk Rules</h4>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Operator</th>
+                    <th>Threshold</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.RiskRules)
+            {
+                <tr>
+                    <td>@r.ParameterName</td>
+                    <td>@r.Operator</td>
+                    <td>@r.ThresholdValue</td>
+                    <td>@r.AdjustmentType</td>
+                    <td>@r.AdjustmentValue</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <h4>Riders</h4>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var rider in Model.Riders)
+            {
+                <tr>
+                    <td>@rider.RiderCode</td>
+                    <td>@rider.Name</td>
+                    <td>@rider.AdjustmentType</td>
+                    <td>@rider.AdjustmentValue</td>
+                    <td>@(rider.IsActive ? "Active" : "Inactive")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <h5>Add Rider</h5>
+        <form asp-controller="ProductAdmin" asp-action="AddRider" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="productId" value="@Model.Product.Id" />
+            <div class="mb-2">
+                <label class="form-label">Rider Code</label>
+                <input class="form-control" name="riderCode" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Name</label>
+                <input class="form-control" name="name" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Adjustment Type</label>
+                <select class="form-select" name="adjustmentType">
+                    <option value="Flat">Flat</option>
+                    <option value="Percent">Percent</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Adjustment Value</label>
+                <input class="form-control" type="number" step="0.01" name="adjustmentValue" value="0" />
+            </div>
+            <button class="btn btn-success" type="submit">Add Rider</button>
+        </form>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a class="btn btn-secondary" asp-controller="ProductAdmin" asp-action="Index">Back</a>
+</div>
