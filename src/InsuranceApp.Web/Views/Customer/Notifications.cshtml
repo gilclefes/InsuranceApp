@@ -14,30 +14,38 @@
         @if (!Model.PolicyNotifications.Any()) { <p class="text-muted">No policy notifications.</p> }
         else
         {
-            <table class="table table-sm">
-                <thead><tr><th>Sent</th><th>Template</th><th>Channel</th><th>Subject</th><th>Status</th></tr></thead>
-                <tbody>
-                    @foreach (var n in Model.PolicyNotifications)
-                    {
-                        <tr><td>@n.SentAtUtc.ToString("yyyy-MM-dd HH:mm")</td><td>@n.TemplateKey</td><td>@n.Channel</td><td>@n.Subject</td><td>@n.Status</td></tr>
-                    }
-                </tbody>
-            </table>
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Sent</th><th>Template</th><th>Channel</th><th>Subject</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var n in Model.PolicyNotifications)
+                            {
+                                <tr><td>@n.SentAtUtc.ToString("yyyy-MM-dd HH:mm")</td><td>@n.TemplateKey</td><td>@n.Channel</td><td>@n.Subject</td><td>@n.Status</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         }
     </div>
     <div id="claim" class="tab-pane">
         @if (!Model.ClaimNotifications.Any()) { <p class="text-muted">No claim notifications.</p> }
         else
         {
-            <table class="table table-sm">
-                <thead><tr><th>Sent</th><th>Channel</th><th>Message</th><th>Status</th></tr></thead>
-                <tbody>
-                    @foreach (var n in Model.ClaimNotifications)
-                    {
-                        <tr><td>@n.SentAtUtc.ToString("yyyy-MM-dd HH:mm")</td><td>@n.Channel</td><td>@n.Message</td><td>@n.Status</td></tr>
-                    }
-                </tbody>
-            </table>
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Sent</th><th>Channel</th><th>Message</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var n in Model.ClaimNotifications)
+                            {
+                                <tr><td>@n.SentAtUtc.ToString("yyyy-MM-dd HH:mm")</td><td>@n.Channel</td><td>@n.Message</td><td>@n.Status</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         }
     </div>
 </div>

@@ -3,35 +3,39 @@
     ViewData["Title"] = "My Claims";
 }
 
-<div class="d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h2 class="mb-0">My claims</h2>
     <a class="btn btn-primary" asp-action="NewClaim">File a new claim</a>
 </div>
 
 @if (TempData["Success"] is string ok) { <div class="alert alert-success mt-3">@ok</div> }
 
-<table class="table table-striped mt-3">
-    <thead>
-        <tr><th>Claim</th><th>Policy</th><th>Type</th><th>Amount</th><th>Status</th><th>Filed</th></tr>
-    </thead>
-    <tbody>
-        @if (!Model.Claims.Any())
-        {
-            <tr><td colspan="6" class="text-muted">No claims filed.</td></tr>
-        }
-        else
-        {
-            foreach (var c in Model.Claims)
-            {
-                <tr>
-                    <td>@c.ClaimNumber</td>
-                    <td>@c.PolicyNumber</td>
-                    <td>@c.ClaimType</td>
-                    <td>@c.ClaimedAmount.ToString("N2")</td>
-                    <td>@c.Status</td>
-                    <td>@c.CreatedAtUtc.ToString("yyyy-MM-dd")</td>
-                </tr>
-            }
-        }
-    </tbody>
-</table>
+<div class="table-card mt-3">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr><th>Claim</th><th>Policy</th><th>Type</th><th>Amount</th><th>Status</th><th>Filed</th></tr>
+            </thead>
+            <tbody>
+                @if (!Model.Claims.Any())
+                {
+                    <tr><td colspan="6" class="text-muted">No claims filed.</td></tr>
+                }
+                else
+                {
+                    foreach (var c in Model.Claims)
+                    {
+                        <tr>
+                            <td>@c.ClaimNumber</td>
+                            <td>@c.PolicyNumber</td>
+                            <td>@c.ClaimType</td>
+                            <td>@c.ClaimedAmount.ToString("N2")</td>
+                            <td>@c.Status</td>
+                            <td>@c.CreatedAtUtc.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -2,11 +2,13 @@
     ViewData["Title"] = "InsuranceApp - Ghana";
 }
 
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-3">
-        <h1 class="display-5 fw-bold">Insurance you can buy and claim from your phone.</h1>
-        <p class="col-md-9 fs-5">Motor, Education, Funeral and Custom policies for Ghana. Onboard with your Ghana Card, pay by Mobile Money, and track claims digitally.</p>
-        <div class="d-flex gap-2 flex-wrap">
+<section class="home-hero mb-4 mb-lg-5">
+    <div class="home-hero-content">
+        <span class="hero-chip">Digital Insurance Platform</span>
+        <h1 class="hero-title">Insurance you can buy and claim from your phone.</h1>
+        <p class="hero-subtitle">Motor, Education, Funeral, and Custom policies for Ghana. Onboard with your Ghana Card, pay by Mobile Money, and track claims digitally in one secure experience.</p>
+
+        <div class="d-flex gap-2 flex-wrap mt-4">
             <a class="btn btn-primary btn-lg" asp-controller="Products" asp-action="Index">Browse products</a>
             @if (User.Identity?.IsAuthenticated == true)
             {
@@ -19,44 +21,73 @@
             }
         </div>
     </div>
-</div>
 
-<div class="row g-3">
-    <div class="col-md-4">
-        <div class="card h-100"><div class="card-body">
-            <h5 class="card-title">1. Get a quote</h5>
-            <p class="card-text">Choose a product and we will calculate your premium in seconds based on your risk profile and selected riders.</p>
-        </div></div>
+    <div class="home-hero-aside">
+        <div class="hero-metric-card interactive-card">
+            <div class="metric-label">Claims visibility</div>
+            <div class="metric-value">24/7</div>
+            <p class="metric-text mb-0">Track claim milestones in real-time from submission to settlement.</p>
+        </div>
+        <div class="hero-metric-card interactive-card">
+            <div class="metric-label">Policy setup</div>
+            <div class="metric-value">Minutes</div>
+            <p class="metric-text mb-0">Quote, verify identity, and issue policies with fewer manual steps.</p>
+        </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100"><div class="card-body">
-            <h5 class="card-title">2. Verify and purchase</h5>
-            <p class="card-text">Confirm your identity with your Ghana Card, accept the policy terms digitally, and authorize Mobile Money or bank collection.</p>
-        </div></div>
+</section>
+
+<section class="mb-4 mb-lg-5">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <article class="card h-100 interactive-card home-step-card">
+                <div class="card-body">
+                    <span class="step-no">01</span>
+                    <h5 class="card-title mt-2">Get a quote</h5>
+                    <p class="card-text mb-0">Choose a product and calculate premiums instantly based on risk profile and rider selections.</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-4">
+            <article class="card h-100 interactive-card home-step-card">
+                <div class="card-body">
+                    <span class="step-no">02</span>
+                    <h5 class="card-title mt-2">Verify and purchase</h5>
+                    <p class="card-text mb-0">Confirm identity with Ghana Card, accept terms digitally, and authorize payment with confidence.</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-4">
+            <article class="card h-100 interactive-card home-step-card">
+                <div class="card-body">
+                    <span class="step-no">03</span>
+                    <h5 class="card-title mt-2">Manage and claim</h5>
+                    <p class="card-text mb-0">View active cover, upcoming premium debits, and submit claims with evidence in a few taps.</p>
+                </div>
+            </article>
+        </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100"><div class="card-body">
-            <h5 class="card-title">3. Manage and claim</h5>
-            <p class="card-text">Track policies, see upcoming premium debits, and file claims with evidence directly from your dashboard.</p>
-        </div></div>
-    </div>
-</div>
+</section>
 
 @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Agent")))
 {
-    <hr class="my-4" />
-    <h4>Operations</h4>
-    <div class="row g-2">
-        <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="PolicyAdmin" asp-action="Index">Policy Admin</a></div>
-        <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="ClaimsAdmin" asp-action="Index">Claims Admin</a></div>
-        @if (User.IsInRole("Admin"))
-        {
-            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="ProductAdmin" asp-action="Index">Product Admin</a></div>
-            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="PremiumAdmin" asp-action="Index">Premium Admin</a></div>
-            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="PayoutAdmin" asp-action="Index">Payout Admin</a></div>
-            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="ComplianceAdmin" asp-action="Index">Compliance</a></div>
-            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="DataRetentionAdmin" asp-action="Index">Data Retention</a></div>
-            <div class="col-md-3"><a class="btn btn-outline-secondary w-100" asp-controller="OperationsAdmin" asp-action="Index">Operations</a></div>
-        }
-    </div>
+    <section class="home-ops-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h4 class="mb-0">Operations</h4>
+            <p class="text-muted mb-0 small">Quick access to administrative workspaces</p>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="PolicyAdmin" asp-action="Index">Policy Admin</a></div>
+            <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="ClaimsAdmin" asp-action="Index">Claims Admin</a></div>
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="ProductAdmin" asp-action="Index">Product Admin</a></div>
+                <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="PremiumAdmin" asp-action="Index">Premium Admin</a></div>
+                <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="PayoutAdmin" asp-action="Index">Payout Admin</a></div>
+                <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="ComplianceAdmin" asp-action="Index">Compliance</a></div>
+                <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="DataRetentionAdmin" asp-action="Index">Data Retention</a></div>
+                <div class="col-12 col-sm-6 col-lg-3"><a class="btn btn-outline-secondary w-100" asp-controller="OperationsAdmin" asp-action="Index">Operations</a></div>
+            }
+        </div>
+    </section>
 }

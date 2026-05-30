@@ -5,24 +5,28 @@
 }
 
 <h1>Commission Ledger</h1>
-<p>Commission rate: <strong>@((l.CommissionRate * 100).ToString("0.00"))%</strong> &middot; Total: <strong>GHS @l.TotalCommission.ToString("N2")</strong></p>
+<p class="page-subtitle">Commission rate: <strong>@((l.CommissionRate * 100).ToString("0.00"))%</strong> &middot; Total: <strong>GHS @l.TotalCommission.ToString("N2")</strong></p>
 
-<table class="table table-striped">
-    <thead><tr><th>Policy</th><th>Product</th><th>Customer</th><th class="text-end">Premium</th><th class="text-end">Commission</th><th>Status</th><th>Inception</th></tr></thead>
-    <tbody>
-        @foreach (var e in l.Entries)
-        {
-            <tr>
-                <td>@e.PolicyNumber</td>
-                <td>@e.ProductCode</td>
-                <td>@e.CustomerName</td>
-                <td class="text-end">@e.PremiumAmount.ToString("N2")</td>
-                <td class="text-end">@e.CommissionAmount.ToString("N2")</td>
-                <td>@e.Status</td>
-                <td>@e.InceptionDate.ToString("yyyy-MM-dd")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="table-card mb-3">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead><tr><th>Policy</th><th>Product</th><th>Customer</th><th class="text-end">Premium</th><th class="text-end">Commission</th><th>Status</th><th>Inception</th></tr></thead>
+            <tbody>
+                @foreach (var e in l.Entries)
+                {
+                    <tr>
+                        <td>@e.PolicyNumber</td>
+                        <td>@e.ProductCode</td>
+                        <td>@e.CustomerName</td>
+                        <td class="text-end">@e.PremiumAmount.ToString("N2")</td>
+                        <td class="text-end">@e.CommissionAmount.ToString("N2")</td>
+                        <td>@e.Status</td>
+                        <td>@e.InceptionDate.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <a class="btn btn-outline-secondary" asp-action="Portfolio">Back to Portfolio</a>

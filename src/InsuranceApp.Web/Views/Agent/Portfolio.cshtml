@@ -4,7 +4,9 @@
     var p = Model.Portfolio;
 }
 
-<h1>My Portfolio</h1>
+<div class="page-header">
+    <h1 class="mb-0">My Portfolio</h1>
+</div>
 @if (TempData["Success"] is string success)
 {
     <div class="alert alert-success">@success</div>
@@ -18,30 +20,34 @@
     <div class="alert alert-danger">@error</div>
 }
 <div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Customers Onboarded</h6><h3>@p.CustomersOnboarded</h3></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Active Policies</h6><h3>@p.ActivePolicies</h3></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Lapsed Policies</h6><h3>@p.LapsedPolicies</h3></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Annualised Premium (GHS)</h6><h3>@p.AnnualisedPremium.ToString("N2")</h3></div></div></div>
+    <div class="col-md-3"><div class="card interactive-card h-100"><div class="card-body"><h6>Customers Onboarded</h6><h3>@p.CustomersOnboarded</h3></div></div></div>
+    <div class="col-md-3"><div class="card interactive-card h-100"><div class="card-body"><h6>Active Policies</h6><h3>@p.ActivePolicies</h3></div></div></div>
+    <div class="col-md-3"><div class="card interactive-card h-100"><div class="card-body"><h6>Lapsed Policies</h6><h3>@p.LapsedPolicies</h3></div></div></div>
+    <div class="col-md-3"><div class="card interactive-card h-100"><div class="card-body"><h6>Annualised Premium (GHS)</h6><h3>@p.AnnualisedPremium.ToString("N2")</h3></div></div></div>
 </div>
 
-<div class="d-flex gap-2 mb-3">
+<div class="d-flex flex-wrap gap-2 mb-3">
     <a class="btn btn-primary" asp-action="Onboard">Onboard New Customer</a>
     <a class="btn btn-outline-secondary" asp-action="Commission">Commission Ledger</a>
 </div>
 
-<table class="table table-striped">
-    <thead><tr><th>Customer #</th><th>Name</th><th>Phone</th><th>Email</th><th class="text-end">Policies</th><th>Created</th></tr></thead>
-    <tbody>
-        @foreach (var c in p.Customers)
-        {
-            <tr>
-                <td>@c.CustomerNumber</td>
-                <td>@c.FullName</td>
-                <td>@c.PhoneNumber</td>
-                <td>@c.Email</td>
-                <td class="text-end">@c.PolicyCount</td>
-                <td>@c.CreatedAtUtc.ToString("u")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead><tr><th>Customer #</th><th>Name</th><th>Phone</th><th>Email</th><th class="text-end">Policies</th><th>Created</th></tr></thead>
+            <tbody>
+                @foreach (var c in p.Customers)
+                {
+                    <tr>
+                        <td>@c.CustomerNumber</td>
+                        <td>@c.FullName</td>
+                        <td>@c.PhoneNumber</td>
+                        <td>@c.Email</td>
+                        <td class="text-end">@c.PolicyCount</td>
+                        <td>@c.CreatedAtUtc.ToString("u")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
