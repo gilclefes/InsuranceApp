@@ -1,31 +1,64 @@
 @model QuoteResultViewModel
 @{
     ViewData["Title"] = "Quote Result";
+    var q = Model.Quote;
 }
 
-<h2>Your quote</h2>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Your Quote is Ready</h4>
+            </div>
+            <div class="card-body">
+                <h5>@Model.ProductName</h5>
+                <p class="text-muted mb-3">Reference: <code>@q.QuoteReference</code></p>
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">@Model.ProductName</h5>
-        <p class="card-text">
-            Reference: <code>@Model.Quote.QuoteReference</code><br />
-            Base premium: @Model.Quote.BasePremium.ToString("N2") @Model.Quote.CurrencyCode<br />
-            <strong>Total premium: @Model.Quote.TotalPremium.ToString("N2") @Model.Quote.CurrencyCode</strong><br />
-            Valid until: @Model.Quote.ValidUntilUtc.ToString("yyyy-MM-dd HH:mm 'UTC'")
-        </p>
+                <table class="table table-sm mb-3">
+                    <tbody>
+                        <tr>
+                            <td>Base Premium</td>
+                            <td class="text-end">@q.BasePremium.ToString("N2") @q.CurrencyCode</td>
+                        </tr>
+                        @if (q.Adjustments.Any())
+                        {
+                            foreach (var adj in q.Adjustments)
+                            {
+                                <tr>
+                                    <td class="ps-3 text-muted">@adj.Reason</td>
+                                    <td class="text-end text-muted">+@adj.Amount.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                        <tr class="fw-bold border-top">
+                            <td>Total Premium</td>
+                            <td class="text-end">@q.TotalPremium.ToString("N2") @q.CurrencyCode</td>
+                        </tr>
+                    </tbody>
+                </table>
 
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <a class="btn btn-success" asp-controller="Customer" asp-action="ConfirmPolicy" asp-route-reference="@Model.Quote.QuoteReference">
-                Purchase policy
-            </a>
-        }
-        else
-        {
-            <a class="btn btn-success" asp-controller="Account" asp-action="Register">Create account to purchase</a>
-            <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("ConfirmPolicy", "Customer", new { reference = Model.Quote.QuoteReference })">Sign in</a>
-        }
-        <a class="btn btn-outline-primary" asp-controller="Products" asp-action="Index">Browse other products</a>
+                <p class="small text-muted mb-4">
+                    This quote is valid until <strong>@q.ValidUntilUtc.ToString("dd MMM yyyy HH:mm") UTC</strong>.
+                </p>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="btn btn-success" asp-controller="Customer" asp-action="ConfirmPolicy" asp-route-reference="@q.QuoteReference">
+                            Purchase Policy
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-success" asp-controller="Account" asp-action="Register">Create Account to Purchase</a>
+                        <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Login"
+                           asp-route-returnUrl="@Url.Action("ConfirmPolicy", "Customer", new { reference = q.QuoteReference })">
+                            Sign In
+                        </a>
+                    }
+                    <a class="btn btn-outline-primary" asp-controller="Products" asp-action="Index">Browse Other Products</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

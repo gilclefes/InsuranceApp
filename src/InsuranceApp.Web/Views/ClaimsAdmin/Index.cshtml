@@ -43,7 +43,21 @@
     </div>
     <div class="col-md-3">
         <label class="form-label">Adjuster</label>
-        <input name="adjusterUserId" value="@Model.AdjusterFilter" class="form-control" />
+        <input id="adjusterFilterSearch" class="form-control mb-2" placeholder="Search adjuster" />
+        <select name="adjusterUserId" id="adjusterFilterSelect" class="form-select">
+            <option value="">All</option>
+            @foreach (var option in Model.AdjusterOptions)
+            {
+                if (string.Equals(option.Value, Model.AdjusterFilter, StringComparison.Ordinal))
+                {
+                    <option value="@option.Value" selected>@option.Label</option>
+                }
+                else
+                {
+                    <option value="@option.Value">@option.Label</option>
+                }
+            }
+        </select>
     </div>
     <div class="col-md-3">
         <label class="form-label">Policy Number</label>
@@ -85,7 +99,7 @@
 
 <div class="card p-3 mb-3">
     <h5>New Claim Intake</h5>
-    <form asp-action="Create" method="post" class="row g-2" novalidate>
+    <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-2" novalidate>
         @Html.AntiForgeryToken()
         <div class="col-md-3">
             <label asp-for="PolicyNumber" class="form-label"></label>
@@ -107,6 +121,10 @@
             <label asp-for="EvidenceUrl" class="form-label"></label>
             <input asp-for="EvidenceUrl" class="form-control" placeholder="https://..." />
         </div>
+        <div class="col-md-3">
+            <label asp-for="EvidenceDocument" class="form-label">Evidence Document (Optional)</label>
+            <input asp-for="EvidenceDocument" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+        </div>
         <div class="col-md-2 d-flex align-items-end">
             <button class="btn btn-primary" type="submit">Create Claim</button>
         </div>
@@ -123,7 +141,14 @@
         </div>
         <div class="col-md-3">
             <label asp-for="AssignAdjusterUserId" class="form-label">Adjuster User Id</label>
-            <input asp-for="AssignAdjusterUserId" class="form-control" />
+            <input id="assignAdjusterSearch" class="form-control mb-2" placeholder="Search adjuster" />
+            <select asp-for="AssignAdjusterUserId" id="assignAdjusterSelect" class="form-select">
+                <option value="">-- Select Adjuster --</option>
+                @foreach (var option in Model.AdjusterOptions)
+                {
+                    <option value="@option.Value">@option.Label</option>
+                }
+            </select>
         </div>
         <div class="col-md-4">
             <label asp-for="AssignNote" class="form-label">Assignment Note</label>
@@ -194,6 +219,10 @@
             {
                 foreach (var item in Model.Claims)
                 {
+                    var adjusterDisplay = string.IsNullOrWhiteSpace(item.AssignedAdjusterId)
+                        ? "Unassigned"
+                        : (Model.AdjusterDisplayById.TryGetValue(item.AssignedAdjusterId, out var adjuster) ? adjuster : item.AssignedAdjusterId);
+
                     <tr>
                         <td>@item.ClaimNumber</td>
                         <td>@item.PolicyNumber</td>
@@ -209,7 +238,7 @@
                                 <span class="badge bg-success">Low (@item.FraudScore)</span>
                             }
                         </td>
-                        <td>@item.AssignedAdjusterId</td>
+                        <td>@adjusterDisplay</td>
                         <td>@item.ClaimedAmount.ToString("N2")</td>
                         <td>@(item.ApprovedAmount?.ToString("N2") ?? "-")</td>
                         <td>@item.DecisionReason</td>
@@ -232,4 +261,36 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            function wireSearch(searchId, selectId) {
+                const search = document.getElementById(searchId);
+                const select = document.getElementById(selectId);
+                if (!search || !select) return;
+
+                const all = Array.from(select.options).map(o => ({ value: o.value, text: o.text }));
+
+                search.addEventListener('input', function () {
+                    const q = search.value.trim().toLowerCase();
+                    const selected = select.value;
+                    select.innerHTML = '';
+
+                    all.forEach(function (option) {
+                        if (!q || option.text.toLowerCase().includes(q)) {
+                            const el = document.createElement('option');
+                            el.value = option.value;
+                            el.text = option.text;
+                            if (option.value === selected) {
+                                el.selected = true;
+                            }
+                            select.appendChild(el);
+                        }
+                    });
+                });
+            }
+
+            wireSearch('adjusterFilterSearch', 'adjusterFilterSelect');
+            wireSearch('assignAdjusterSearch', 'assignAdjusterSelect');
+        })();
+    </script>
 }

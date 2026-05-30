@@ -5,6 +5,18 @@
 }
 
 <h1>My Portfolio</h1>
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["Info"] is string info)
+{
+    <div class="alert alert-info">@info</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Customers Onboarded</h6><h3>@p.CustomersOnboarded</h3></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Active Policies</h6><h3>@p.ActivePolicies</h3></div></div></div>

@@ -1,61 +1,152 @@
 @model GetQuoteViewModel
 @{
     ViewData["Title"] = $"Quote: {Model.ProductName}";
+
+    // Context-aware labels
+    string coverageLabel = Model.ProductTypeId switch
+    {
+        1 => "Vehicle Cover Amount (GHS)",      // Motor
+        7 or 11 => "Property Value (GHS)",      // Fire, Home
+        8 => "Cargo Value (GHS)",               // Marine
+        12 => "Crop / Farm Value (GHS)",        // Agricultural
+        9 => "Travel Cover Amount (GHS)",       // Travel
+        _ => "Coverage Amount (GHS)"
+    };
+
+    string sumAssuredLabel = Model.ProductTypeId switch
+    {
+        2 => "Target Education Fund (GHS)",     // Education
+        3 => "Funeral Benefit Amount (GHS)",    // Funeral
+        13 => "Benefit Amount (GHS)",           // Micro
+        _ => "Sum Assured (GHS)"
+    };
+
+    string ageLabel = Model.ProductTypeId switch
+    {
+        2 => "Parent / Guardian Age",
+        _ => "Applicant Age"
+    };
 }
 
-<h2>Get a quote: @Model.ProductName</h2>
-<p class="text-muted">Provide risk inputs and select optional riders (FR-005).</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Get a Quote &mdash; @Model.ProductName</h4>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(Model.ProductDescription))
+                {
+                    <p class="text-muted mb-3">@Model.ProductDescription</p>
+                }
 
-<form asp-action="Start" method="post" novalidate>
-    @Html.AntiForgeryToken()
-    <input asp-for="ProductCode" type="hidden" />
-    <input asp-for="ProductName" type="hidden" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <form asp-action="Start" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input asp-for="ProductCode" type="hidden" />
+                    <input asp-for="ProductName" type="hidden" />
+                    <input asp-for="ProductTypeId" type="hidden" />
+                    <input asp-for="ProductDescription" type="hidden" />
+                    <input asp-for="MaxCoverageAmount" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
 
-    <div class="row g-3">
-        <div class="col-md-3">
-            <label asp-for="ApplicantAge" class="form-label"></label>
-            <input asp-for="ApplicantAge" class="form-control" type="number" />
-            <span asp-validation-for="ApplicantAge" class="text-danger"></span>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="CoverageAmount" class="form-label"></label>
-            <input asp-for="CoverageAmount" class="form-control" type="number" step="0.01" />
-            <span asp-validation-for="CoverageAmount" class="text-danger"></span>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="VehicleValue" class="form-label"></label>
-            <input asp-for="VehicleValue" class="form-control" type="number" step="0.01" />
-            <span asp-validation-for="VehicleValue" class="text-danger"></span>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="SumAssured" class="form-label"></label>
-            <input asp-for="SumAssured" class="form-control" type="number" step="0.01" />
-            <span asp-validation-for="SumAssured" class="text-danger"></span>
+                    <h5 class="mb-3">Risk Information</h5>
+                    <div class="row g-3 mb-4">
+                        @if (Model.ShowApplicantAge)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">@ageLabel</label>
+                                <input asp-for="ApplicantAge" class="form-control" type="number" min="0" max="100" />
+                                <span asp-validation-for="ApplicantAge" class="text-danger"></span>
+                            </div>
+                        }
+                        else
+                        {
+                            <input asp-for="ApplicantAge" type="hidden" value="0" />
+                        }
+
+                        @if (Model.ShowCoverageAmount)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">@coverageLabel</label>
+                                <input asp-for="CoverageAmount" class="form-control" type="number" step="0.01" min="0"
+                                       max="@(Model.MaxCoverageAmount > 0 ? Model.MaxCoverageAmount.ToString("F0") : "100000000")" />
+                                <span asp-validation-for="CoverageAmount" class="text-danger"></span>
+                                @if (Model.MaxCoverageAmount > 0)
+                                {
+                                    <small class="text-muted">Max: @Model.MaxCoverageAmount.ToString("N0") GHS</small>
+                                }
+                            </div>
+                        }
+
+                        @if (Model.ShowVehicleValue)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">Vehicle Value (GHS)</label>
+                                <input asp-for="VehicleValue" class="form-control" type="number" step="0.01" min="0" />
+                                <span asp-validation-for="VehicleValue" class="text-danger"></span>
+                                <small class="text-muted">Market value of the vehicle to be insured.</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <input asp-for="VehicleValue" type="hidden" value="0" />
+                        }
+
+                        @if (Model.ShowSumAssured)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">@sumAssuredLabel</label>
+                                <input asp-for="SumAssured" class="form-control" type="number" step="0.01" min="0" />
+                                <span asp-validation-for="SumAssured" class="text-danger"></span>
+                            </div>
+                        }
+                        else
+                        {
+                            <input asp-for="SumAssured" type="hidden" value="0" />
+                        }
+                    </div>
+
+                    @if (Model.AvailableRiders.Any())
+                    {
+                        <h5 class="mb-3">Optional Add-Ons (Riders)</h5>
+                        <div class="row g-2 mb-4">
+                            @for (var i = 0; i < Model.AvailableRiders.Count; i++)
+                            {
+                                var rider = Model.AvailableRiders[i];
+                                <input type="hidden" name="AvailableRiders[@i].RiderCode" value="@rider.RiderCode" />
+                                <input type="hidden" name="AvailableRiders[@i].Name" value="@rider.Name" />
+                                <input type="hidden" name="AvailableRiders[@i].AdjustmentType" value="@rider.AdjustmentType" />
+                                <input type="hidden" name="AvailableRiders[@i].AdjustmentValue" value="@rider.AdjustmentValue" />
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body py-2 px-3">
+                                            <div class="form-check">
+                                                <input type="checkbox" name="SelectedRiderCodes" value="@rider.RiderCode" class="form-check-input" id="rider-@i"
+                                                       @(Model.SelectedRiderCodes?.Contains(rider.RiderCode) == true ? "checked" : "") />
+                                                <label for="rider-@i" class="form-check-label">
+                                                    <strong>@rider.Name</strong>
+                                                    <br />
+                                                    <small class="text-muted">
+                                                        @(rider.AdjustmentType == "Percent" ? $"+{rider.AdjustmentValue}% of base premium" : $"+{rider.AdjustmentValue:N2} GHS flat")
+                                                    </small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><span aria-hidden="true">&#9889;</span> Generate Quote</button>
+                        <a class="btn btn-outline-secondary" asp-controller="Products" asp-action="Details" asp-route-code="@Model.ProductCode">Back to product</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-
-    @if (Model.AvailableRiders.Any())
-    {
-        <h5 class="mt-4">Optional riders</h5>
-        <div class="row g-2">
-            @for (var i = 0; i < Model.AvailableRiders.Count; i++)
-            {
-                var rider = Model.AvailableRiders[i];
-                <div class="col-md-4">
-                    <div class="form-check">
-                        <input type="checkbox" name="SelectedRiderCodes" value="@rider.RiderCode" class="form-check-input" id="rider-@i" />
-                        <label for="rider-@i" class="form-check-label">
-                            @rider.Name <small class="text-muted">(@rider.AdjustmentType @rider.AdjustmentValue)</small>
-                        </label>
-                    </div>
-                </div>
-            }
-        </div>
-    }
-
-    <button type="submit" class="btn btn-primary mt-4">Generate quote</button>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -1,5 +1,6 @@
 using InsuranceApp.Contracts.Agents;
 using InsuranceApp.Contracts.Onboarding;
+using Microsoft.AspNetCore.Http;
 
 namespace InsuranceApp.Web.Models;
 
@@ -15,5 +16,9 @@ public class AgentCommissionViewModel
 
 public class AgentOnboardViewModel
 {
-    public AgentOnboardCustomerRequest Request { get; set; } = new();
+    public AgentOnboardCustomerRequest Request { get; set; } = new()
+    {
+        DateOfBirth = DateTime.UtcNow.Date.AddYears(-18)
+    };
+    public IFormFile? CustomerIntakeForm { get; set; }
 }

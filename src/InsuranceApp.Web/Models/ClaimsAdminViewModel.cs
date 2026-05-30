@@ -1,4 +1,6 @@
 using InsuranceApp.Contracts.Claims;
+using Microsoft.AspNetCore.Http;
+using InsuranceApp.Web.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace InsuranceApp.Web.Models;
@@ -23,6 +25,7 @@ public sealed class ClaimsAdminViewModel
     public decimal ClaimedAmount { get; set; }
 
     public string EvidenceUrl { get; set; } = string.Empty;
+    public IFormFile? EvidenceDocument { get; set; }
 
     public string AssignClaimNumber { get; set; } = string.Empty;
     public string AssignAdjusterUserId { get; set; } = string.Empty;
@@ -38,4 +41,6 @@ public sealed class ClaimsAdminViewModel
     public IReadOnlyCollection<ClaimResponse> Claims { get; set; } = Array.Empty<ClaimResponse>();
     public IReadOnlyCollection<ClaimTimelineEventResponse> Timeline { get; set; } = Array.Empty<ClaimTimelineEventResponse>();
     public ClaimSlaDashboardResponse? Dashboard { get; set; }
+    public IReadOnlyCollection<LookupOption> AdjusterOptions { get; set; } = Array.Empty<LookupOption>();
+    public IReadOnlyDictionary<string, string> AdjusterDisplayById { get; set; } = new Dictionary<string, string>();
 }

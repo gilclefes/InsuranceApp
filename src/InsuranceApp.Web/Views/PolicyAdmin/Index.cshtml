@@ -39,6 +39,7 @@
             <tr>
                 <th>Policy Number</th>
                 <th>Customer</th>
+                <th>Assigned Agent</th>
                 <th>Product</th>
                 <th>Premium</th>
                 <th>Status</th>
@@ -50,16 +51,24 @@
             @if (!Model.Policies.Any())
             {
                 <tr>
-                    <td colspan="7" class="text-muted">No policies found.</td>
+                    <td colspan="8" class="text-muted">No policies found.</td>
                 </tr>
             }
             else
             {
                 foreach (var policy in Model.Policies)
                 {
+                    var customerDisplay = Model.CustomerDisplayById.TryGetValue(policy.CustomerId, out var customer)
+                        ? customer
+                        : $"Customer #{policy.CustomerId}";
+                    var agentDisplay = string.IsNullOrWhiteSpace(policy.AssignedAgentId)
+                        ? "Unassigned"
+                        : (Model.AgentDisplayById.TryGetValue(policy.AssignedAgentId, out var agent) ? agent : policy.AssignedAgentId);
+
                     <tr>
                         <td>@policy.PolicyNumber</td>
-                        <td>@policy.CustomerId</td>
+                        <td>@customerDisplay</td>
+                        <td>@agentDisplay</td>
                         <td>@policy.ProductType</td>
                         <td>@policy.PremiumAmount.ToString("N2") @policy.CurrencyCode</td>
                         <td>@policy.Status</td>

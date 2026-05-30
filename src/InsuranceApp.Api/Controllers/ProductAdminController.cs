@@ -23,10 +23,20 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
                 Id = x.Id,
                 ProductCode = x.ProductCode,
                 Name = x.Name,
+                Description = x.Description,
+                CoverageSummary = x.CoverageSummary,
                 ProductType = (int)x.ProductType,
+                NicClassCode = x.NicClassCode,
                 CurrencyCode = x.CurrencyCode,
                 BaseRate = x.BaseRate,
                 MinPremium = x.MinPremium,
+                MaxCoverageAmount = x.MaxCoverageAmount,
+                MinEntryAgeYears = x.MinEntryAgeYears,
+                MaxEntryAgeYears = x.MaxEntryAgeYears,
+                PolicyTermOptions = x.PolicyTermOptions,
+                WaitingPeriodDays = x.WaitingPeriodDays,
+                Exclusions = x.Exclusions,
+                UnderwritingRequirements = x.UnderwritingRequirements,
                 IsActive = x.IsActive
             })
             .ToListAsync(cancellationToken);
@@ -47,27 +57,27 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         {
             ProductCode = request.ProductCode.Trim().ToUpperInvariant(),
             Name = request.Name,
+            Description = request.Description,
+            CoverageSummary = request.CoverageSummary,
             ProductType = Enum.IsDefined(typeof(ProductType), request.ProductType) ? (ProductType)request.ProductType : ProductType.Custom,
+            NicClassCode = request.NicClassCode,
             CurrencyCode = request.CurrencyCode,
             BaseRate = request.BaseRate,
             MinPremium = request.MinPremium,
+            MaxCoverageAmount = request.MaxCoverageAmount,
+            MinEntryAgeYears = request.MinEntryAgeYears,
+            MaxEntryAgeYears = request.MaxEntryAgeYears,
+            PolicyTermOptions = request.PolicyTermOptions,
+            WaitingPeriodDays = request.WaitingPeriodDays,
+            Exclusions = request.Exclusions,
+            UnderwritingRequirements = request.UnderwritingRequirements,
             IsActive = true
         };
 
         dbContext.ProductDefinitions.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(new ProductDefinitionResponse
-        {
-            Id = entity.Id,
-            ProductCode = entity.ProductCode,
-            Name = entity.Name,
-            ProductType = (int)entity.ProductType,
-            CurrencyCode = entity.CurrencyCode,
-            BaseRate = entity.BaseRate,
-            MinPremium = entity.MinPremium,
-            IsActive = entity.IsActive
-        });
+        return Ok(MapToResponse(entity));
     }
 
     [HttpPut("{id:long}")]
@@ -80,25 +90,47 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         }
 
         entity.Name = request.Name;
+        entity.Description = request.Description;
+        entity.CoverageSummary = request.CoverageSummary;
+        entity.NicClassCode = request.NicClassCode;
         entity.CurrencyCode = request.CurrencyCode;
         entity.BaseRate = request.BaseRate;
         entity.MinPremium = request.MinPremium;
+        entity.MaxCoverageAmount = request.MaxCoverageAmount;
+        entity.MinEntryAgeYears = request.MinEntryAgeYears;
+        entity.MaxEntryAgeYears = request.MaxEntryAgeYears;
+        entity.PolicyTermOptions = request.PolicyTermOptions;
+        entity.WaitingPeriodDays = request.WaitingPeriodDays;
+        entity.Exclusions = request.Exclusions;
+        entity.UnderwritingRequirements = request.UnderwritingRequirements;
         entity.IsActive = request.IsActive;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(new ProductDefinitionResponse
-        {
-            Id = entity.Id,
-            ProductCode = entity.ProductCode,
-            Name = entity.Name,
-            ProductType = (int)entity.ProductType,
-            CurrencyCode = entity.CurrencyCode,
-            BaseRate = entity.BaseRate,
-            MinPremium = entity.MinPremium,
-            IsActive = entity.IsActive
-        });
+        return Ok(MapToResponse(entity));
     }
+
+    private static ProductDefinitionResponse MapToResponse(ProductDefinition e) => new()
+    {
+        Id = e.Id,
+        ProductCode = e.ProductCode,
+        Name = e.Name,
+        Description = e.Description,
+        CoverageSummary = e.CoverageSummary,
+        ProductType = (int)e.ProductType,
+        NicClassCode = e.NicClassCode,
+        CurrencyCode = e.CurrencyCode,
+        BaseRate = e.BaseRate,
+        MinPremium = e.MinPremium,
+        MaxCoverageAmount = e.MaxCoverageAmount,
+        MinEntryAgeYears = e.MinEntryAgeYears,
+        MaxEntryAgeYears = e.MaxEntryAgeYears,
+        PolicyTermOptions = e.PolicyTermOptions,
+        WaitingPeriodDays = e.WaitingPeriodDays,
+        Exclusions = e.Exclusions,
+        UnderwritingRequirements = e.UnderwritingRequirements,
+        IsActive = e.IsActive
+    };
 
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Deactivate(long id, CancellationToken cancellationToken)

@@ -4,13 +4,18 @@
 }
 
 <h1>Onboard Customer (Assisted)</h1>
+<p class="text-muted">Admin, office staff, and agents can register customers and upload signed intake forms.</p>
 
 @if (TempData["Error"] is string err)
 {
     <div class="alert alert-danger">@err</div>
 }
+@if (TempData["Info"] is string info)
+{
+    <div class="alert alert-info">@info</div>
+}
 
-<form method="post" asp-action="Onboard" class="row g-3">
+<form method="post" asp-action="Onboard" enctype="multipart/form-data" class="row g-3">
     @Html.AntiForgeryToken()
     <div class="col-md-6"><label class="form-label">First Name</label><input class="form-control" asp-for="Request.Register.FirstName" required /></div>
     <div class="col-md-6"><label class="form-label">Last Name</label><input class="form-control" asp-for="Request.Register.LastName" required /></div>
@@ -19,6 +24,7 @@
     <div class="col-md-6"><label class="form-label">Password</label><input class="form-control" type="password" asp-for="Request.Register.Password" required /></div>
     <div class="col-md-6"><label class="form-label">Date of Birth</label><input class="form-control" type="date" asp-for="Request.DateOfBirth" required /></div>
     <div class="col-md-6"><label class="form-label">Ghana Card Number</label><input class="form-control" asp-for="Request.GhanaCardNumber" required /></div>
+    <div class="col-md-6"><label class="form-label" asp-for="CustomerIntakeForm">Customer Intake Form (Optional)</label><input class="form-control" asp-for="CustomerIntakeForm" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" /></div>
     <div class="col-md-6 form-check mt-4"><input class="form-check-input" type="checkbox" asp-for="Request.ConsentAccepted" /> <label class="form-check-label">Customer consent captured</label></div>
     <div class="col-12"><button type="submit" class="btn btn-primary">Onboard</button> <a class="btn btn-link" asp-action="Portfolio">Cancel</a></div>
 </form>

@@ -73,6 +73,12 @@ static async Task SeedAdminUserAsync(WebApplication app)
         await roleManager.CreateAsync(new IdentityRole(customerRole));
     }
 
+    const string officeStaffRole = "OfficeStaff";
+    if (!await roleManager.RoleExistsAsync(officeStaffRole))
+    {
+        await roleManager.CreateAsync(new IdentityRole(officeStaffRole));
+    }
+
     var email = configuration["SeedAdmin:Email"] ?? "admin@insuranceapp.local";
     var password = configuration["SeedAdmin:Password"] ?? "Admin123!";
     var normalizedEmail = email.Trim().ToLowerInvariant();

@@ -38,6 +38,9 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
         {
             ProductCode = product.ProductCode,
             ProductName = product.Name,
+            ProductTypeId = (int)product.ProductType,
+            ProductDescription = product.Description,
+            MaxCoverageAmount = product.MaxCoverageAmount,
             AvailableRiders = riders.Select(r => new RiderOption
             {
                 RiderCode = r.RiderCode,
@@ -56,6 +59,8 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
     {
         if (!ModelState.IsValid)
         {
+            // Reload product metadata for the re-rendered form
+            await ReloadProductMetadataAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -76,6 +81,7 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
         catch (InvalidOperationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
+            await ReloadProductMetadataAsync(model, cancellationToken);
             return View(model);
         }
     }
@@ -116,5 +122,35 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
                 AppliedRiders = Array.Empty<QuoteRiderAdjustment>()
             }
         });
+    }
+
+    private async Task ReloadProductMetadataAsync(GetQuoteViewModel model, CancellationToken cancellationToken)
+    {
+        var product = await dbContext.ProductDefinitions
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.ProductCode == model.ProductCode, cancellationToken);
+
+        if (product is not null)
+        {
+            model.ProductTypeId = (int)product.ProductType;
+            model.ProductDescription = product.Description;
+            model.MaxCoverageAmount = product.MaxCoverageAmount;
+        }
+
+        if (model.AvailableRiders.Count == 0 && product is not null)
+        {
+            model.AvailableRiders = await dbContext.ProductRiders
+                .AsNoTracking()
+                .Where(x => x.ProductDefinitionId == product.Id && x.IsActive)
+                .OrderBy(x => x.Name)
+                .Select(r => new RiderOption
+                {
+                    RiderCode = r.RiderCode,
+                    Name = r.Name,
+                    AdjustmentType = r.AdjustmentType,
+                    AdjustmentValue = r.AdjustmentValue
+                })
+                .ToListAsync(cancellationToken);
+        }
     }
 }

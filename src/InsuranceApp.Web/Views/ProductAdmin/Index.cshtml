@@ -4,14 +4,19 @@
 }
 
 <h2>Product Configuration</h2>
-<p>Manage risk rules and riders for configured products.</p>
+<p>Manage risk rules, riders, and product details for configured insurance products.</p>
 
-<table class="table table-striped">
+<div class="table-responsive">
+<table class="table table-striped table-sm">
     <thead>
         <tr>
             <th>Code</th>
             <th>Name</th>
             <th>Type</th>
+            <th>NIC Class</th>
+            <th>Min Premium</th>
+            <th>Max Cover</th>
+            <th>Age Range</th>
             <th>Status</th>
             <th></th>
         </tr>
@@ -23,6 +28,10 @@
             <td>@p.ProductCode</td>
             <td>@p.Name</td>
             <td>@p.ProductType</td>
+            <td>@p.NicClassCode</td>
+            <td>@p.MinPremium.ToString("N2") @p.CurrencyCode</td>
+            <td>@(p.MaxCoverageAmount > 0 ? $"{p.MaxCoverageAmount:N0} {p.CurrencyCode}" : "-")</td>
+            <td>@p.MinEntryAgeYears&ndash;@p.MaxEntryAgeYears</td>
             <td>@(p.IsActive ? "Active" : "Inactive")</td>
             <td>
                 <a class="btn btn-sm btn-primary" asp-controller="ProductAdmin" asp-action="Configure" asp-route-id="@p.Id">Configure</a>
@@ -31,3 +40,4 @@
     }
     </tbody>
 </table>
+</div>

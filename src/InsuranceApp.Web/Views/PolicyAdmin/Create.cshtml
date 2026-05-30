@@ -4,9 +4,9 @@
 }
 
 <h2>Create Policy From Quote</h2>
-<p class="text-muted">Admin and agent users can issue policies directly from an approved quote reference.</p>
+<p class="text-muted">Admin, office staff, and agent users can subscribe customers to policies from approved quote references.</p>
 
-<form asp-action="Create" method="post" novalidate>
+<form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -18,12 +18,25 @@
         </div>
         <div class="col-md-6">
             <label asp-for="CustomerId" class="form-label"></label>
-            <input asp-for="CustomerId" class="form-control" />
+            <input id="customerSearch" class="form-control mb-2" placeholder="Search customer by number, name, or email" />
+            <select asp-for="CustomerId" class="form-select" id="customerSelect">
+                <option value="">-- Select Customer --</option>
+                @foreach (var option in Model.CustomerOptions)
+                {
+                    <option value="@option.Value">@option.Label</option>
+                }
+            </select>
             <span asp-validation-for="CustomerId" class="text-danger"></span>
         </div>
         <div class="col-md-6">
             <label asp-for="AssignedAgentId" class="form-label"></label>
-            <input asp-for="AssignedAgentId" class="form-control" />
+            <input id="agentSearch" class="form-control mb-2" placeholder="Search assigned agent" />
+            <select asp-for="AssignedAgentId" class="form-select" id="agentSelect">
+                @foreach (var option in Model.AgentOptions)
+                {
+                    <option value="@option.Value">@option.Label</option>
+                }
+            </select>
             <span asp-validation-for="AssignedAgentId" class="text-danger"></span>
         </div>
         <div class="col-md-6">
@@ -41,6 +54,11 @@
             <input asp-for="ExpiryDate" class="form-control" />
             <span asp-validation-for="ExpiryDate" class="text-danger"></span>
         </div>
+        <div class="col-md-12">
+            <label asp-for="SupportingDocument" class="form-label">Supporting Document (Optional)</label>
+            <input asp-for="SupportingDocument" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+            <span asp-validation-for="SupportingDocument" class="text-danger"></span>
+        </div>
     </div>
 
     <div class="mt-3 d-flex gap-2">
@@ -51,4 +69,36 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            function wireSearch(searchId, selectId) {
+                const search = document.getElementById(searchId);
+                const select = document.getElementById(selectId);
+                if (!search || !select) return;
+
+                const all = Array.from(select.options).map(o => ({ value: o.value, text: o.text }));
+
+                search.addEventListener('input', function () {
+                    const q = search.value.trim().toLowerCase();
+                    const selected = select.value;
+                    select.innerHTML = '';
+
+                    all.forEach(function (option) {
+                        if (!q || option.text.toLowerCase().includes(q)) {
+                            const el = document.createElement('option');
+                            el.value = option.value;
+                            el.text = option.text;
+                            if (option.value === selected) {
+                                el.selected = true;
+                            }
+                            select.appendChild(el);
+                        }
+                    });
+                });
+            }
+
+            wireSearch('customerSearch', 'customerSelect');
+            wireSearch('agentSearch', 'agentSelect');
+        })();
+    </script>
 }

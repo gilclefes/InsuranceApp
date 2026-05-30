@@ -4,6 +4,7 @@ using InsuranceApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InsuranceApp.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(InsuranceDbContext))]
-    partial class InsuranceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530101854_AddCustomerDocumentRegistry")]
+    partial class AddCustomerDocumentRegistry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1043,11 +1046,6 @@ namespace InsuranceApp.Infrastructure.Persistence.Migrations
                         .HasPrecision(10, 4)
                         .HasColumnType("decimal(10,4)");
 
-                    b.Property<string>("CoverageSummary")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime(6)");
 
@@ -1056,44 +1054,14 @@ namespace InsuranceApp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("varchar(3)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("Exclusions")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<decimal>("MaxCoverageAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("MaxEntryAgeYears")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MinEntryAgeYears")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("MinPremium")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)");
-
-                    b.Property<string>("NicClassCode")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("varchar(16)");
-
-                    b.Property<string>("PolicyTermOptions")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("varchar(120)");
@@ -1106,16 +1074,8 @@ namespace InsuranceApp.Infrastructure.Persistence.Migrations
                     b.Property<int>("ProductType")
                         .HasColumnType("int");
 
-                    b.Property<string>("UnderwritingRequirements")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int>("WaitingPeriodDays")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1129,323 +1089,27 @@ namespace InsuranceApp.Infrastructure.Persistence.Migrations
                         {
                             Id = 1L,
                             BaseRate = 0.0100m,
-                            CoverageSummary = "Third-party bodily injury and death; third-party property damage up to GHS 5,000; ECOWAS Brown Card cover for cross-border travel.",
                             CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
                             CurrencyCode = "GHS",
-                            Description = "Mandatory third-party liability cover for all vehicles on Ghana roads as required by the Motor Vehicles (Third Party Insurance) Act, 1958.",
-                            Exclusions = "Damage to insured's own vehicle; driving under the influence of alcohol or drugs; unlicensed drivers.",
                             IsActive = true,
-                            MaxCoverageAmount = 0m,
-                            MaxEntryAgeYears = 75,
-                            MinEntryAgeYears = 18,
                             MinPremium = 120.00m,
                             Name = "Motor Third-Party",
-                            NicClassCode = "NIC-MOT-01",
-                            PolicyTermOptions = "Annual",
                             ProductCode = "MOTOR-TP",
                             ProductType = 1,
-                            UnderwritingRequirements = "Valid DVLA vehicle registration; valid driver's licence; vehicle roadworthiness certificate.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
+                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 2L,
                             BaseRate = 0.0200m,
-                            CoverageSummary = "Lump-sum payout on death; covers coffin, mortuary fees, transportation of remains, and customary rites.",
                             CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
                             CurrencyCode = "GHS",
-                            Description = "Affordable funeral expense cover paying a lump sum upon death of the insured to assist families with funeral and burial costs in line with Ghanaian traditions.",
-                            Exclusions = "Suicide within 12 months; death from pre-existing condition not disclosed at enrollment.",
                             IsActive = true,
-                            MaxCoverageAmount = 50000.00m,
-                            MaxEntryAgeYears = 70,
-                            MinEntryAgeYears = 18,
                             MinPremium = 50.00m,
-                            Name = "Funeral Policy (Standard)",
-                            NicClassCode = "NIC-LIF-04",
-                            PolicyTermOptions = "Monthly,Annual",
+                            Name = "Funeral Standard",
                             ProductCode = "FUNERAL-STD",
                             ProductType = 3,
-                            UnderwritingRequirements = "Ghana Card or valid national ID; completed health declaration form.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 180
-                        },
-                        new
-                        {
-                            Id = 3L,
-                            BaseRate = 0.0350m,
-                            CoverageSummary = "Own damage and total loss; fire and theft; third-party bodily injury and property damage; towing and recovery; personal accident for driver and passengers.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Full cover for private and commercial vehicles including own damage, theft, fire, and third-party liability.",
-                            Exclusions = "Mechanical and electrical breakdown; wear and tear; driving without valid licence; racing or speed testing.",
-                            IsActive = true,
-                            MaxCoverageAmount = 500000.00m,
-                            MaxEntryAgeYears = 75,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 450.00m,
-                            Name = "Motor Comprehensive",
-                            NicClassCode = "NIC-MOT-02",
-                            PolicyTermOptions = "Annual",
-                            ProductCode = "MOTOR-COMP",
-                            ProductType = 1,
-                            UnderwritingRequirements = "Vehicle inspection report; valid DVLA registration; driver's licence; proof of vehicle value (invoice or valuation).",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            BaseRate = 0.0200m,
-                            CoverageSummary = "Third-party bodily injury and property damage; fire damage to insured vehicle; vehicle theft and attempted theft.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Intermediate motor cover combining mandatory third-party liability with fire damage and theft protection.",
-                            Exclusions = "Own damage from accidents; mechanical breakdown; consequential loss.",
-                            IsActive = true,
-                            MaxCoverageAmount = 300000.00m,
-                            MaxEntryAgeYears = 75,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 250.00m,
-                            Name = "Motor Third-Party Fire & Theft",
-                            NicClassCode = "NIC-MOT-03",
-                            PolicyTermOptions = "Annual",
-                            ProductCode = "MOTOR-TPF",
-                            ProductType = 1,
-                            UnderwritingRequirements = "Valid DVLA registration; driver's licence; vehicle roadworthiness certificate.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            BaseRate = 0.0150m,
-                            CoverageSummary = "Guaranteed maturity benefit for school fees; death benefit equal to sum assured; premium waiver on death or total permanent disability of parent.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "A savings-linked insurance plan ensuring children's education fees are covered even if the parent or guardian passes away or becomes permanently disabled.",
-                            Exclusions = "Suicide within 12 months; fraudulent claims.",
-                            IsActive = true,
-                            MaxCoverageAmount = 200000.00m,
-                            MaxEntryAgeYears = 55,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 100.00m,
-                            Name = "Education Endowment Plan",
-                            NicClassCode = "NIC-LIF-02",
-                            PolicyTermOptions = "5 Years,10 Years,15 Years",
-                            ProductCode = "EDU-PLAN",
-                            ProductType = 2,
-                            UnderwritingRequirements = "Ghana Card; child's birth certificate; health declaration form; proof of income.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            BaseRate = 0.0080m,
-                            CoverageSummary = "Death benefit payable to named beneficiaries; optional accidental death double indemnity; conversion option to whole life.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Pure protection cover paying a lump sum to beneficiaries if the policyholder dies within the selected term.",
-                            Exclusions = "Suicide within 24 months; death from war or terrorism; hazardous occupations not disclosed.",
-                            IsActive = true,
-                            MaxCoverageAmount = 1000000.00m,
-                            MaxEntryAgeYears = 65,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 80.00m,
-                            Name = "Term Life Assurance",
-                            NicClassCode = "NIC-LIF-01",
-                            PolicyTermOptions = "5 Years,10 Years,15 Years,20 Years",
-                            ProductCode = "LIFE-TERM",
-                            ProductType = 5,
-                            UnderwritingRequirements = "Ghana Card; medical examination for sum assured above GHS 100,000; completed proposal form.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 7L,
-                            BaseRate = 0.0400m,
-                            CoverageSummary = "In-patient and out-patient treatment; specialist and diagnostic services; prescribed medicines; emergency evacuation within Ghana; maternity cover (optional).",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Complementary health cover providing access to private hospitals, specialist consultations, and prescription medicines beyond NHIS coverage.",
-                            Exclusions = "Pre-existing conditions (first 12 months); cosmetic surgery; self-inflicted injuries; HIV/AIDS treatment (unless rider purchased).",
-                            IsActive = true,
-                            MaxCoverageAmount = 100000.00m,
-                            MaxEntryAgeYears = 65,
-                            MinEntryAgeYears = 0,
-                            MinPremium = 200.00m,
-                            Name = "Private Health Insurance",
-                            NicClassCode = "NIC-HLT-01",
-                            PolicyTermOptions = "Annual",
-                            ProductCode = "HEALTH-PRIV",
-                            ProductType = 6,
-                            UnderwritingRequirements = "Ghana Card or birth certificate (dependants); NHIS registration number; health questionnaire.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 30
-                        },
-                        new
-                        {
-                            Id = 8L,
-                            BaseRate = 0.0025m,
-                            CoverageSummary = "Building structure; contents and personal belongings; liability to domestic employees; temporary alternative accommodation; burst pipes and water damage.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Protection for residential properties against fire, flood, storm, theft, and other perils common in Ghana.",
-                            Exclusions = "War and civil commotion; gradual deterioration; illegal structures; unoccupied property beyond 30 days without notice.",
-                            IsActive = true,
-                            MaxCoverageAmount = 2000000.00m,
-                            MaxEntryAgeYears = 99,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 150.00m,
-                            Name = "Home & Property Insurance",
-                            NicClassCode = "NIC-FIR-02",
-                            PolicyTermOptions = "Annual",
-                            ProductCode = "HOME-PROP",
-                            ProductType = 11,
-                            UnderwritingRequirements = "Property valuation report; proof of ownership or tenancy; Ghana Card.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 9L,
-                            BaseRate = 0.0500m,
-                            CoverageSummary = "Emergency medical treatment abroad; medical evacuation and repatriation; trip cancellation and curtailment; lost or delayed baggage; personal liability.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Covers Ghanaian travellers for medical emergencies, trip cancellation, lost luggage, and personal liability while abroad.",
-                            Exclusions = "Travel against medical advice; extreme sports (unless rider); pre-existing conditions; travel to sanctioned countries.",
-                            IsActive = true,
-                            MaxCoverageAmount = 500000.00m,
-                            MaxEntryAgeYears = 80,
-                            MinEntryAgeYears = 0,
-                            MinPremium = 50.00m,
-                            Name = "Travel Insurance",
-                            NicClassCode = "NIC-MIS-01",
-                            PolicyTermOptions = "Single Trip,Annual Multi-Trip",
-                            ProductCode = "TRAVEL-GH",
-                            ProductType = 9,
-                            UnderwritingRequirements = "Valid passport; flight itinerary; Ghana Card.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 10L,
-                            BaseRate = 0.0060m,
-                            CoverageSummary = "Accidental death benefit; permanent total disability; permanent partial disability (schedule of benefits); temporary total disability weekly benefit; medical expenses from accident.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Pays defined benefits for accidental death, permanent disability, or temporary disability arising from accidents.",
-                            Exclusions = "Self-inflicted injuries; injuries while under influence of drugs/alcohol; injuries from criminal activity; war and terrorism.",
-                            IsActive = true,
-                            MaxCoverageAmount = 200000.00m,
-                            MaxEntryAgeYears = 65,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 60.00m,
-                            Name = "Personal Accident",
-                            NicClassCode = "NIC-ACC-01",
-                            PolicyTermOptions = "Annual",
-                            ProductCode = "PA-COVER",
-                            ProductType = 10,
-                            UnderwritingRequirements = "Ghana Card; occupation declaration; health declaration for high-risk occupations.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 11L,
-                            BaseRate = 0.0030m,
-                            CoverageSummary = "Fire and lightning; explosion; storm and flood; aircraft damage; riot and strikes; impact by vehicles; burst pipes; business interruption (optional).",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Covers commercial properties including shops, warehouses, and offices against fire, lightning, explosion, and allied perils.",
-                            Exclusions = "Arson by insured; war and nuclear risks; gradual deterioration; electrical/mechanical breakdown.",
-                            IsActive = true,
-                            MaxCoverageAmount = 10000000.00m,
-                            MaxEntryAgeYears = 99,
-                            MinEntryAgeYears = 0,
-                            MinPremium = 300.00m,
-                            Name = "Fire & Allied Perils (Commercial)",
-                            NicClassCode = "NIC-FIR-01",
-                            PolicyTermOptions = "Annual",
-                            ProductCode = "FIRE-COM",
-                            ProductType = 7,
-                            UnderwritingRequirements = "Property valuation; fire safety inspection report; business registration certificate.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 12L,
-                            BaseRate = 0.0045m,
-                            CoverageSummary = "Loss or damage to cargo during transit; general average contribution; salvage charges; warehouse-to-warehouse cover.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Protects goods in transit by sea, air, or land, covering imports through Tema and Takoradi ports.",
-                            Exclusions = "Inherent vice of goods; willful misconduct; delay; ordinary leakage and breakage; nuclear risks.",
-                            IsActive = true,
-                            MaxCoverageAmount = 5000000.00m,
-                            MaxEntryAgeYears = 99,
-                            MinEntryAgeYears = 0,
-                            MinPremium = 500.00m,
-                            Name = "Marine Cargo Insurance",
-                            NicClassCode = "NIC-MAR-01",
-                            PolicyTermOptions = "Per Shipment,Annual Open Cover",
-                            ProductCode = "MARINE-CARGO",
-                            ProductType = 8,
-                            UnderwritingRequirements = "Commercial invoice; bill of lading or airway bill; packing list; import declaration form (IDF).",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 13L,
-                            BaseRate = 0.0500m,
-                            CoverageSummary = "Crop loss from drought, flood, pest, and disease; replanting costs; yield shortfall indemnity; parametric (weather-index) trigger option.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Index-based and multi-peril crop cover designed for Ghana's cocoa, maize, rice, and vegetable farmers under the Ghana Agricultural Insurance Programme (GAIP) framework.",
-                            Exclusions = "Losses due to negligent farming practices; theft of harvest; government-mandated destruction.",
-                            IsActive = true,
-                            MaxCoverageAmount = 100000.00m,
-                            MaxEntryAgeYears = 75,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 30.00m,
-                            Name = "Agricultural Crop Insurance",
-                            NicClassCode = "NIC-AGR-01",
-                            PolicyTermOptions = "Seasonal,Annual",
-                            ProductCode = "AGRI-CROP",
-                            ProductType = 12,
-                            UnderwritingRequirements = "Farm location GPS coordinates; crop type and acreage declaration; farmer ID or Ghana Card.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 0
-                        },
-                        new
-                        {
-                            Id = 14L,
-                            BaseRate = 0.0300m,
-                            CoverageSummary = "Death benefit; hospitalisation daily cash benefit; permanent disability benefit. Premiums collectible via MTN MoMo, Vodafone Cash, or AirtelTigo Money.",
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CurrencyCode = "GHS",
-                            Description = "Affordable, NIC-regulated micro-insurance for low-income earners offering basic life and hospital cash benefits, distributed via mobile money.",
-                            Exclusions = "Suicide; death from pre-existing illness within 6 months; injuries from criminal activity.",
-                            IsActive = true,
-                            MaxCoverageAmount = 10000.00m,
-                            MaxEntryAgeYears = 60,
-                            MinEntryAgeYears = 18,
-                            MinPremium = 5.00m,
-                            Name = "Micro-Insurance (Nhyira Plan)",
-                            NicClassCode = "NIC-MIC-01",
-                            PolicyTermOptions = "Monthly,Quarterly,Annual",
-                            ProductCode = "MICRO-INS",
-                            ProductType = 13,
-                            UnderwritingRequirements = "Ghana Card or voter ID; mobile money wallet number; basic health declaration.",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WaitingPeriodDays = 30
+                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -1518,78 +1182,6 @@ namespace InsuranceApp.Infrastructure.Persistence.Migrations
                             Name = "Family Plus Rider",
                             ProductDefinitionId = 2L,
                             RiderCode = "FAMILY_PLUS",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 3L,
-                            AdjustmentType = "Flat",
-                            AdjustmentValue = 50m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Name = "Excess Buy-Back",
-                            ProductDefinitionId = 3L,
-                            RiderCode = "EXCESS_BUY",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            AdjustmentType = "Flat",
-                            AdjustmentValue = 35m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Name = "24hr Roadside Assistance & Towing",
-                            ProductDefinitionId = 3L,
-                            RiderCode = "TOWING",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            AdjustmentType = "Percent",
-                            AdjustmentValue = 3m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Name = "Accidental Death Double Indemnity",
-                            ProductDefinitionId = 6L,
-                            RiderCode = "DBL_INDEM",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            AdjustmentType = "Flat",
-                            AdjustmentValue = 100m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Name = "Maternity Benefit",
-                            ProductDefinitionId = 7L,
-                            RiderCode = "MATERNITY",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 7L,
-                            AdjustmentType = "Flat",
-                            AdjustmentValue = 60m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Name = "Dental & Optical Cover",
-                            ProductDefinitionId = 7L,
-                            RiderCode = "DENTAL",
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 8L,
-                            AdjustmentType = "Percent",
-                            AdjustmentValue = 15m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Name = "Extreme Sports Cover",
-                            ProductDefinitionId = 9L,
-                            RiderCode = "EXTREME_SP",
                             UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
@@ -1683,58 +1275,6 @@ namespace InsuranceApp.Infrastructure.Persistence.Migrations
                             ProductDefinitionId = 2L,
                             Reason = "High sum assured rider",
                             ThresholdValue = 20000m,
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            AdjustmentType = "Percent",
-                            AdjustmentValue = 15m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Operator = "<",
-                            ParameterName = "ApplicantAge",
-                            ProductDefinitionId = 3L,
-                            Reason = "Young driver loading (comprehensive)",
-                            ThresholdValue = 25m,
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            AdjustmentType = "Percent",
-                            AdjustmentValue = 5m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Operator = ">",
-                            ParameterName = "VehicleValue",
-                            ProductDefinitionId = 3L,
-                            Reason = "High-value vehicle loading",
-                            ThresholdValue = 200000m,
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            AdjustmentType = "Percent",
-                            AdjustmentValue = 20m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Operator = ">",
-                            ParameterName = "ApplicantAge",
-                            ProductDefinitionId = 6L,
-                            Reason = "Older age life loading",
-                            ThresholdValue = 50m,
-                            UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = 7L,
-                            AdjustmentType = "Flat",
-                            AdjustmentValue = 50m,
-                            CreatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Operator = ">",
-                            ParameterName = "SumAssured",
-                            ProductDefinitionId = 6L,
-                            Reason = "Medical examination required surcharge",
-                            ThresholdValue = 100000m,
                             UpdatedAtUtc = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });

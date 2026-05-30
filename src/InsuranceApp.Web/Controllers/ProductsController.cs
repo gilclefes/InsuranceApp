@@ -1,4 +1,5 @@
 using InsuranceApp.Domain.Entities;
+using InsuranceApp.Domain.Enums;
 using InsuranceApp.Infrastructure.Persistence;
 using InsuranceApp.Web.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -11,16 +12,23 @@ namespace InsuranceApp.Web.Controllers;
 public class ProductsController(InsuranceDbContext dbContext) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? type, CancellationToken cancellationToken)
     {
-        var products = await dbContext.ProductDefinitions
+        var query = dbContext.ProductDefinitions
             .AsNoTracking()
-            .Where(x => x.IsActive)
+            .Where(x => x.IsActive);
+
+        if (Enum.TryParse<ProductType>(type, true, out var parsed))
+        {
+            query = query.Where(x => x.ProductType == parsed);
+        }
+
+        var products = await query
             .OrderBy(x => x.ProductType)
             .ThenBy(x => x.Name)
             .ToListAsync(cancellationToken);
 
-        return View(new ProductCatalogViewModel { Products = products });
+        return View(new ProductCatalogViewModel { Products = products, TypeFilter = type });
     }
 
     [HttpGet]

@@ -1,31 +1,124 @@
 @model ProductDetailsViewModel
 @{
     ViewData["Title"] = Model.Product.Name;
+    var p = Model.Product;
 }
 
 <a asp-action="Index" class="text-decoration-none">&larr; Back to products</a>
-<h2 class="mt-2">@Model.Product.Name</h2>
-<p class="text-muted">@Model.Product.ProductType policy. Currency: @Model.Product.CurrencyCode.</p>
+<h2 class="mt-2">@p.Name</h2>
+<p class="text-muted">@p.ProductType &middot; @p.NicClassCode &middot; Currency: @p.CurrencyCode</p>
 
-<dl class="row">
-    <dt class="col-sm-3">Product code</dt><dd class="col-sm-9">@Model.Product.ProductCode</dd>
-    <dt class="col-sm-3">Base rate</dt><dd class="col-sm-9">@Model.Product.BaseRate.ToString("P2")</dd>
-    <dt class="col-sm-3">Minimum premium</dt><dd class="col-sm-9">@Model.Product.MinPremium.ToString("N2") @Model.Product.CurrencyCode</dd>
-</dl>
+@if (!string.IsNullOrWhiteSpace(p.Description))
+{
+    <p>@p.Description</p>
+}
 
-<h4>Optional riders</h4>
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><strong>Key Facts</strong></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Product Code</dt><dd class="col-sm-7">@p.ProductCode</dd>
+                    <dt class="col-sm-5">Base Rate</dt><dd class="col-sm-7">@p.BaseRate.ToString("P2")</dd>
+                    <dt class="col-sm-5">Min. Premium</dt><dd class="col-sm-7">@p.MinPremium.ToString("N2") @p.CurrencyCode</dd>
+                    @if (p.MaxCoverageAmount > 0)
+                    {
+                        <dt class="col-sm-5">Max. Coverage</dt><dd class="col-sm-7">@p.MaxCoverageAmount.ToString("N0") @p.CurrencyCode</dd>
+                    }
+                    @if (p.MinEntryAgeYears > 0 || p.MaxEntryAgeYears < 99)
+                    {
+                        <dt class="col-sm-5">Entry Age</dt><dd class="col-sm-7">@p.MinEntryAgeYears&ndash;@p.MaxEntryAgeYears years</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(p.PolicyTermOptions))
+                    {
+                        <dt class="col-sm-5">Policy Terms</dt><dd class="col-sm-7">@p.PolicyTermOptions</dd>
+                    }
+                    @if (p.WaitingPeriodDays > 0)
+                    {
+                        <dt class="col-sm-5">Waiting Period</dt><dd class="col-sm-7">@p.WaitingPeriodDays days</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><strong>What Is Covered</strong></div>
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(p.CoverageSummary))
+                {
+                    <ul class="mb-0">
+                        @foreach (var item in p.CoverageSummary.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Coverage details not yet specified.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(p.Exclusions))
+{
+    <div class="card mb-4">
+        <div class="card-header"><strong>Exclusions</strong></div>
+        <div class="card-body">
+            <ul class="mb-0">
+                @foreach (var item in p.Exclusions.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    <li>@item</li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(p.UnderwritingRequirements))
+{
+    <div class="card mb-4">
+        <div class="card-header"><strong>Requirements</strong></div>
+        <div class="card-body">
+            <ul class="mb-0">
+                @foreach (var item in p.UnderwritingRequirements.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    <li>@item</li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+<h4>Optional Riders / Add-Ons</h4>
 @if (!Model.Riders.Any())
 {
     <p class="text-muted">No optional riders are configured for this product.</p>
 }
 else
 {
-    <ul>
-        @foreach (var rider in Model.Riders)
-        {
-            <li><strong>@rider.Name</strong> &mdash; @rider.AdjustmentType @rider.AdjustmentValue</li>
-        }
-    </ul>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr><th>Rider</th><th>Adjustment</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var rider in Model.Riders)
+                {
+                    <tr>
+                        <td>@rider.Name</td>
+                        <td>@rider.AdjustmentType</td>
+                        <td>@(rider.AdjustmentType == "Percent" ? $"{rider.AdjustmentValue}%" : $"{rider.AdjustmentValue:N2} GHS")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
-<a class="btn btn-primary mt-3" asp-controller="Quote" asp-action="Start" asp-route-code="@Model.Product.ProductCode">Get a quote</a>
+<a class="btn btn-primary mt-3" asp-controller="Quote" asp-action="Start" asp-route-code="@p.ProductCode">Get a Quote</a>

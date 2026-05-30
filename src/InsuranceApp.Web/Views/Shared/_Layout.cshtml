@@ -10,112 +10,153 @@
     <link rel="stylesheet" href="~/InsuranceApp.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
+    @{
+        var currentController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty).ToLowerInvariant();
+        var currentAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty).ToLowerInvariant();
+
+        var isHome = currentController == "home" && currentAction == "index";
+        var isProducts = currentController == "products" && currentAction == "index";
+
+        var isCustomerDashboard = currentController == "customer" && currentAction == "dashboard";
+        var isCustomerPolicies = currentController == "customer" && currentAction == "policies";
+        var isCustomerClaims = currentController == "customer" && currentAction == "claims";
+        var isCustomerPayments = currentController == "customer" && currentAction == "payments";
+
+        var isPolicyAdmin = currentController == "policyadmin" && currentAction == "index";
+        var isClaimsAdmin = currentController == "claimsadmin" && currentAction == "index";
+        var isAgentPortfolio = currentController == "agent" && currentAction == "portfolio";
+        var isCustomerDocuments = currentController == "customerdocuments" && currentAction == "index";
+
+        var isProductAdmin = currentController == "productadmin" && currentAction == "index";
+        var isPremiumAdmin = currentController == "premiumadmin" && currentAction == "index";
+        var isPayoutAdmin = currentController == "payoutadmin" && currentAction == "index";
+        var isComplianceAdmin = currentController == "complianceadmin" && currentAction == "index";
+        var isReports = currentController == "reports" && (currentAction == "finance" || currentAction == "auditlog");
+        var isDataRetentionAdmin = currentController == "dataretentionadmin" && currentAction == "index";
+        var isOperationsAdmin = currentController == "operationsadmin" && currentAction == "index";
+
+        var generalActive = isHome || isProducts;
+        var customerActive = isCustomerDashboard || isCustomerPolicies || isCustomerClaims || isCustomerPayments;
+        var operationsActive = isPolicyAdmin || isClaimsAdmin || isAgentPortfolio || isCustomerDocuments;
+        var adminSuiteActive = isProductAdmin || isPremiumAdmin || isPayoutAdmin || isComplianceAdmin || isReports || isDataRetentionAdmin || isOperationsAdmin;
+    }
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand navbar-light bg-white border-bottom box-shadow">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">InsuranceApp</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav" aria-controls="sidebarNav"
+                        aria-expanded="false" aria-label="Toggle menu">
+                    <span class="menu-icon" aria-hidden="true">&#9776;</span> Menu
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Products</a>
-                        </li>
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Customer" asp-action="Dashboard">My Dashboard</a>
+                                <span class="nav-link text-dark mb-0"><span class="menu-icon" aria-hidden="true">&#128100;</span>@User.Identity.Name</span>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Customer" asp-action="Policies">My Policies</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Customer" asp-action="Claims">My Claims</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Customer" asp-action="Payments">My Payments</a>
-                            </li>
-                            @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
-                            {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="PolicyAdmin" asp-action="Index">Policy Admin</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="ClaimsAdmin" asp-action="Index">Claims Admin</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Agent" asp-action="Portfolio">Agent Portal</a>
-                            </li>
-                            }
-                            @if (User.IsInRole("Admin"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="ProductAdmin" asp-action="Index">Product Admin</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="PremiumAdmin" asp-action="Index">Premium Admin</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="PayoutAdmin" asp-action="Index">Payout Admin</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="ComplianceAdmin" asp-action="Index">Compliance Admin</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Reports" asp-action="Finance">Reports</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="DataRetentionAdmin" asp-action="Index">Data Retention</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="OperationsAdmin" asp-action="Index">Operations</a>
-                                </li>
-                            }
-                        }
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">@User.Identity.Name</span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="TwoFactor" asp-action="Status">2FA</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="TwoFactor" asp-action="Status"><span class="menu-icon" aria-hidden="true">&#128737;</span>2FA</a>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-link nav-link text-dark">Logout</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><span class="menu-icon" aria-hidden="true">&#10162;</span>Logout</button>
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Register">Register</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                         }
-                    </ul>
-                </div>
+                </ul>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
+    <div class="app-shell">
+        <aside id="sidebarNav" class="sidebar-nav collapse d-lg-block">
+            <nav>
+                <div class="sidebar-group">
+                    <button class="sidebar-parent @(generalActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuGeneral" aria-expanded="false" aria-controls="menuGeneral">
+                        <span class="menu-icon" aria-hidden="true">&#129517;</span>
+                        <span class="sidebar-parent-label">General</span>
+                        <span class="sidebar-caret" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <ul id="menuGeneral" class="sidebar-list collapse">
+                        <li><a class="sidebar-link @(isHome ? "active" : string.Empty)" asp-controller="Home" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#127968;</span><span>Home</span></a></li>
+                        <li><a class="sidebar-link @(isProducts ? "active" : string.Empty)" asp-controller="Products" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128230;</span><span>Products</span></a></li>
+                    </ul>
+                </div>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="sidebar-group">
+                        <button class="sidebar-parent @(customerActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuCustomer" aria-expanded="false" aria-controls="menuCustomer">
+                            <span class="menu-icon" aria-hidden="true">&#128188;</span>
+                            <span class="sidebar-parent-label">Customer</span>
+                            <span class="sidebar-caret" aria-hidden="true">&#9662;</span>
+                        </button>
+                        <ul id="menuCustomer" class="sidebar-list collapse">
+                            <li><a class="sidebar-link @(isCustomerDashboard ? "active" : string.Empty)" asp-controller="Customer" asp-action="Dashboard"><span class="menu-icon" aria-hidden="true">&#128202;</span><span>My Dashboard</span></a></li>
+                            <li><a class="sidebar-link @(isCustomerPolicies ? "active" : string.Empty)" asp-controller="Customer" asp-action="Policies"><span class="menu-icon" aria-hidden="true">&#128196;</span><span>My Policies</span></a></li>
+                            <li><a class="sidebar-link @(isCustomerClaims ? "active" : string.Empty)" asp-controller="Customer" asp-action="Claims"><span class="menu-icon" aria-hidden="true">&#128221;</span><span>My Claims</span></a></li>
+                            <li><a class="sidebar-link @(isCustomerPayments ? "active" : string.Empty)" asp-controller="Customer" asp-action="Payments"><span class="menu-icon" aria-hidden="true">&#128179;</span><span>My Payments</span></a></li>
+                        </ul>
+                    </div>
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Agent") || User.IsInRole("OfficeStaff"))
+                    {
+                        <div class="sidebar-group">
+                            <button class="sidebar-parent @(operationsActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuOperations" aria-expanded="false" aria-controls="menuOperations">
+                                <span class="menu-icon" aria-hidden="true">&#128295;</span>
+                                <span class="sidebar-parent-label">Operations</span>
+                                <span class="sidebar-caret" aria-hidden="true">&#9662;</span>
+                            </button>
+                            <ul id="menuOperations" class="sidebar-list collapse">
+                                <li><a class="sidebar-link @(isPolicyAdmin ? "active" : string.Empty)" asp-controller="PolicyAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128209;</span><span>Policy Admin</span></a></li>
+                                <li><a class="sidebar-link @(isClaimsAdmin ? "active" : string.Empty)" asp-controller="ClaimsAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128203;</span><span>Claims Admin</span></a></li>
+                                <li><a class="sidebar-link @(isAgentPortfolio ? "active" : string.Empty)" asp-controller="Agent" asp-action="Portfolio"><span class="menu-icon" aria-hidden="true">&#128101;</span><span>Agent Portal</span></a></li>
+                                <li><a class="sidebar-link @(isCustomerDocuments ? "active" : string.Empty)" asp-controller="CustomerDocuments" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128194;</span><span>Customer Documents</span></a></li>
+                            </ul>
+                        </div>
+                    }
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="sidebar-group">
+                            <button class="sidebar-parent @(adminSuiteActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuAdminSuite" aria-expanded="false" aria-controls="menuAdminSuite">
+                                <span class="menu-icon" aria-hidden="true">&#9873;</span>
+                                <span class="sidebar-parent-label">Admin Suite</span>
+                                <span class="sidebar-caret" aria-hidden="true">&#9662;</span>
+                            </button>
+                            <ul id="menuAdminSuite" class="sidebar-list collapse">
+                                <li><a class="sidebar-link @(isProductAdmin ? "active" : string.Empty)" asp-controller="ProductAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128208;</span><span>Product Admin</span></a></li>
+                                <li><a class="sidebar-link @(isPremiumAdmin ? "active" : string.Empty)" asp-controller="PremiumAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128184;</span><span>Premium Admin</span></a></li>
+                                <li><a class="sidebar-link @(isPayoutAdmin ? "active" : string.Empty)" asp-controller="PayoutAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#127974;</span><span>Payout Admin</span></a></li>
+                                <li><a class="sidebar-link @(isComplianceAdmin ? "active" : string.Empty)" asp-controller="ComplianceAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128737;</span><span>Compliance Admin</span></a></li>
+                                <li><a class="sidebar-link @(isReports ? "active" : string.Empty)" asp-controller="Reports" asp-action="Finance"><span class="menu-icon" aria-hidden="true">&#128200;</span><span>Reports</span></a></li>
+                                <li><a class="sidebar-link @(isDataRetentionAdmin ? "active" : string.Empty)" asp-controller="DataRetentionAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128451;</span><span>Data Retention</span></a></li>
+                                <li><a class="sidebar-link @(isOperationsAdmin ? "active" : string.Empty)" asp-controller="OperationsAdmin" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#9881;</span><span>Operations</span></a></li>
+                            </ul>
+                        </div>
+                    }
+                }
+            </nav>
+        </aside>
+
+        <main role="main" class="app-content pb-3">
+            <div class="content-container">
+                @RenderBody()
+            </div>
         </main>
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
+        <div class="content-container">
             &copy; 2026 - InsuranceApp.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>

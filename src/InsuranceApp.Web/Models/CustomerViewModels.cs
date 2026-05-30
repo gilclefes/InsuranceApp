@@ -28,7 +28,7 @@ public sealed class RegisterViewModel
 
     [Required, DataType(DataType.Date)]
     [Display(Name = "Date of Birth")]
-    public DateTime DateOfBirth { get; set; } = DateTime.UtcNow.Date.AddYears(-25);
+    public DateTime DateOfBirth { get; set; } = DateTime.UtcNow.Date.AddYears(-18);
 
     [Required, DataType(DataType.Password), StringLength(100, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
@@ -45,6 +45,7 @@ public sealed class RegisterViewModel
 public sealed class ProductCatalogViewModel
 {
     public IReadOnlyCollection<ProductDefinition> Products { get; set; } = Array.Empty<ProductDefinition>();
+    public string? TypeFilter { get; set; }
 }
 
 public sealed class ProductDetailsViewModel
@@ -60,11 +61,17 @@ public sealed class GetQuoteViewModel
 
     public string ProductName { get; set; } = string.Empty;
 
+    public int ProductTypeId { get; set; }
+
+    public string ProductDescription { get; set; } = string.Empty;
+
+    public decimal MaxCoverageAmount { get; set; }
+
     [Range(0, 100000000)]
     [Display(Name = "Coverage Amount (GHS)")]
     public decimal CoverageAmount { get; set; }
 
-    [Range(18, 100)]
+    [Range(0, 100)]
     [Display(Name = "Applicant Age")]
     public int ApplicantAge { get; set; } = 30;
 
@@ -78,6 +85,12 @@ public sealed class GetQuoteViewModel
 
     public List<RiderOption> AvailableRiders { get; set; } = new();
     public List<string> SelectedRiderCodes { get; set; } = new();
+
+    // Helpers for the view to decide which fields to show
+    public bool ShowVehicleValue => ProductTypeId == 1; // Motor only
+    public bool ShowApplicantAge => ProductTypeId is 1 or 2 or 3 or 5 or 6 or 7 or 10 or 12 or 13; // not Fire, Marine, Home
+    public bool ShowCoverageAmount => true; // always available
+    public bool ShowSumAssured => ProductTypeId is 2 or 3 or 5 or 6 or 10 or 13; // Education, Funeral, Life, Health, PA, Micro
 }
 
 public sealed class RiderOption
