@@ -19,6 +19,11 @@ public class DataRetentionController(IDataRetentionService dataRetentionService)
     [HttpPost("run")]
     public async Task<IActionResult> Run(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await dataRetentionService.RunRetentionAsync(cancellationToken);
         return Ok(result);
     }

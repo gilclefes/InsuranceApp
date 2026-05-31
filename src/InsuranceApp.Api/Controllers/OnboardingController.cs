@@ -15,6 +15,11 @@ public class OnboardingController(IOnboardingService onboardingService, IIdentit
     [HttpPost("profile")]
     public async Task<IActionResult> CaptureProfile([FromBody] CaptureProfileRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await onboardingService.CaptureProfileAsync(request, cancellationToken);
@@ -40,6 +45,11 @@ public class OnboardingController(IOnboardingService onboardingService, IIdentit
     [HttpPost("agent-assisted")]
     public async Task<IActionResult> AgentAssistedOnboarding([FromBody] AgentOnboardCustomerRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var agentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
         if (string.IsNullOrWhiteSpace(agentUserId))
         {

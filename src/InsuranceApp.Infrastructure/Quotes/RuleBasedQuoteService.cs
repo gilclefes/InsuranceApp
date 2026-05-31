@@ -1,23 +1,33 @@
 using InsuranceApp.Application.Interfaces;
+using InsuranceApp.Infrastructure.Caching;
 using InsuranceApp.Contracts.Quotes;
 using InsuranceApp.Domain.Entities;
 using InsuranceApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace InsuranceApp.Infrastructure.Quotes;
 
-public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
+public class RuleBasedQuoteService(InsuranceDbContext dbContext, IMemoryCache? cache = null) : IQuoteService
 {
+    private readonly IMemoryCache memoryCache = cache ?? new MemoryCache(new MemoryCacheOptions());
+
     public async Task<GenerateQuoteResponse> GenerateQuoteAsync(GenerateQuoteRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
         return await GenerateAndPersistQuoteAsync(request, cancellationToken);
     }
 
     public async Task<QuoteRecordResponse> GetQuoteAsync(string quoteReference, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(quoteReference))
+        {
+            throw new InvalidOperationException("Quote reference is required.");
+        }
+
         var quote = await dbContext.QuoteRecords
             .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.QuoteReference == quoteReference, cancellationToken)
+            .SingleOrDefaultAsync(x => x.QuoteReference == quoteReference.Trim(), cancellationToken)
             ?? throw new InvalidOperationException("Quote reference not found.");
 
         return MapQuote(quote);
@@ -25,6 +35,11 @@ public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
 
     public async Task<IReadOnlyCollection<QuoteRecordResponse>> ListQuotesAsync(string? productCode, string? status, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
     {
+        if (fromUtc.HasValue && toUtc.HasValue && fromUtc.Value > toUtc.Value)
+        {
+            throw new InvalidOperationException("FromUtc must be less than or equal to ToUtc.");
+        }
+
         var query = dbContext.QuoteRecords.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(productCode))
@@ -56,8 +71,13 @@ public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
 
     public async Task<GenerateQuoteResponse> RepriceQuoteAsync(string quoteReference, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(quoteReference))
+        {
+            throw new InvalidOperationException("Quote reference is required.");
+        }
+
         var current = await dbContext.QuoteRecords
-            .SingleOrDefaultAsync(x => x.QuoteReference == quoteReference, cancellationToken)
+            .SingleOrDefaultAsync(x => x.QuoteReference == quoteReference.Trim(), cancellationToken)
             ?? throw new InvalidOperationException("Quote reference not found.");
 
         if (string.Equals(current.Status, "Issued", StringComparison.OrdinalIgnoreCase))
@@ -83,8 +103,13 @@ public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
 
     public async Task<QuoteRecordResponse> ExpireQuoteAsync(string quoteReference, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(quoteReference))
+        {
+            throw new InvalidOperationException("Quote reference is required.");
+        }
+
         var quote = await dbContext.QuoteRecords
-            .SingleOrDefaultAsync(x => x.QuoteReference == quoteReference, cancellationToken)
+            .SingleOrDefaultAsync(x => x.QuoteReference == quoteReference.Trim(), cancellationToken)
             ?? throw new InvalidOperationException("Quote reference not found.");
 
         if (string.Equals(quote.Status, "Issued", StringComparison.OrdinalIgnoreCase))
@@ -101,9 +126,15 @@ public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
 
     private async Task<GenerateQuoteResponse> GenerateAndPersistQuoteAsync(GenerateQuoteRequest request, CancellationToken cancellationToken)
     {
-        var product = await dbContext.ProductDefinitions
-            .Include(x => x.RiskRules)
-            .SingleOrDefaultAsync(x => x.ProductCode == request.ProductCode && x.IsActive, cancellationToken)
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.ProductCode))
+        {
+            throw new InvalidOperationException("Product code is required.");
+        }
+
+        var productCode = request.ProductCode.Trim().ToUpperInvariant();
+        var product = await GetActiveProductDefinitionAsync(productCode, cancellationToken)
             ?? throw new InvalidOperationException("Product not found or inactive.");
 
         var insuredBase = request.CoverageAmount > 0 ? request.CoverageAmount : request.SumAssured;
@@ -143,9 +174,9 @@ public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
 
         if (selectedRiderCodes.Count > 0)
         {
-            var riders = await dbContext.ProductRiders
-                .Where(x => x.ProductDefinitionId == product.Id && x.IsActive && selectedRiderCodes.Contains(x.RiderCode))
-                .ToListAsync(cancellationToken);
+            var riders = product.Riders
+                .Where(x => x.IsActive && selectedRiderCodes.Contains(x.RiderCode))
+                .ToList();
 
             foreach (var rider in riders)
             {
@@ -206,6 +237,23 @@ public class RuleBasedQuoteService(InsuranceDbContext dbContext) : IQuoteService
             Adjustments = adjustments,
             AppliedRiders = riderAdjustments
         };
+    }
+
+    private Task<ProductDefinition?> GetActiveProductDefinitionAsync(string productCode, CancellationToken cancellationToken)
+    {
+        var version = ProductCacheVersion.Get(memoryCache);
+        var cacheKey = $"quote:product:v{version}:{productCode}";
+        return memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            entry.SlidingExpiration = TimeSpan.FromMinutes(2);
+
+            return await dbContext.ProductDefinitions
+                .AsNoTracking()
+                .Include(x => x.RiskRules)
+                .Include(x => x.Riders)
+                .SingleOrDefaultAsync(x => x.ProductCode == productCode && x.IsActive, cancellationToken);
+        });
     }
 
     private static QuoteRecordResponse MapQuote(QuoteRecord quote)

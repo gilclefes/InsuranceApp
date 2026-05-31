@@ -19,6 +19,11 @@ public class OperationsHardeningController(IOperationsHardeningService operation
     [HttpPost("failover-drill/run")]
     public async Task<IActionResult> RunFailoverDrill(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await operationsHardeningService.RunFailoverDrillAsync(cancellationToken);
         return Ok(result);
     }

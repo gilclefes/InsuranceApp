@@ -108,7 +108,7 @@ public class CustomerController(
 
         var product = await dbContext.ProductDefinitions
             .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.ProductCode == quote.ProductCode, cancellationToken);
+            .SingleOrDefaultAsync(x => x.ProductCode == quote.ProductCode && x.IsActive, cancellationToken);
 
         return View(new ConfirmPolicyViewModel
         {
@@ -149,7 +149,9 @@ public class CustomerController(
             }, cancellationToken);
 
             // Persist signature as a policy document for audit (FR-008).
-            var policy = await dbContext.Policies.SingleOrDefaultAsync(x => x.PolicyNumber == response.PolicyNumber, cancellationToken);
+            var policy = await dbContext.Policies
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.PolicyNumber == response.PolicyNumber, cancellationToken);
             if (policy is not null)
             {
                 dbContext.PolicyDocuments.Add(new PolicyDocument
@@ -197,12 +199,15 @@ public class CustomerController(
         var customer = await ResolveCustomerAsync(cancellationToken);
         if (customer is null) return Forbid();
 
-        var owns = await dbContext.Policies.AnyAsync(x => x.PolicyNumber == policyNumber && x.CustomerId == customer.Id, cancellationToken);
+        var normalizedPolicy = policyNumber.Trim().ToUpperInvariant();
+        var owns = await dbContext.Policies
+            .AsNoTracking()
+            .AnyAsync(x => x.PolicyNumber == normalizedPolicy && x.CustomerId == customer.Id, cancellationToken);
         if (!owns) return Forbid();
 
         try
         {
-            var file = await policyIssuanceService.GetPolicyDocumentAsync(policyNumber, cancellationToken);
+            var file = await policyIssuanceService.GetPolicyDocumentAsync(normalizedPolicy, cancellationToken);
             return File(file.Content, file.ContentType, file.FileName);
         }
         catch (InvalidOperationException)
@@ -265,7 +270,10 @@ public class CustomerController(
             return View(model);
         }
 
-        var owns = await dbContext.Policies.AnyAsync(x => x.PolicyNumber == model.PolicyNumber && x.CustomerId == customer.Id, cancellationToken);
+        var normalizedPolicy = model.PolicyNumber.Trim().ToUpperInvariant();
+        var owns = await dbContext.Policies
+            .AsNoTracking()
+            .AnyAsync(x => x.PolicyNumber == normalizedPolicy && x.CustomerId == customer.Id, cancellationToken);
         if (!owns)
         {
             ModelState.AddModelError(string.Empty, "Selected policy does not belong to your account.");
@@ -277,7 +285,7 @@ public class CustomerController(
         {
             var claim = await claimService.CreateClaimAsync(new CreateClaimRequest
             {
-                PolicyNumber = model.PolicyNumber,
+                PolicyNumber = normalizedPolicy,
                 IncidentDate = model.IncidentDate,
                 ClaimType = model.ClaimType,
                 ClaimedAmount = model.ClaimedAmount,
@@ -357,6 +365,8 @@ public class CustomerController(
         {
             return null;
         }
-        return await dbContext.Customers.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
+        return await dbContext.Customers
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 }

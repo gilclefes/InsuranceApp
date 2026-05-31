@@ -33,6 +33,14 @@
 <h2>Insurance Products</h2>
 <p class="text-muted">Browse our range of NIC-regulated insurance products designed for the Ghanaian market. Choose a product to learn more or get an instant quote.</p>
 
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="alert alert-success d-flex justify-content-between align-items-center flex-wrap gap-2" role="alert">
+        <span>You are signed in. Quotes and purchases will be linked to your account.</span>
+        <a class="btn btn-sm btn-success" asp-controller="Customer" asp-action="Dashboard">Go to My Dashboard</a>
+    </div>
+}
+
 <form method="get" class="row g-2 mb-4 align-items-end">
     <div class="col-auto">
         <label class="form-label">Filter by type</label>

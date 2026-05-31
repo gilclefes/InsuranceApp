@@ -101,29 +101,36 @@
     <h5>New Claim Intake</h5>
     <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-2" novalidate>
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-3">
             <label asp-for="PolicyNumber" class="form-label"></label>
             <input asp-for="PolicyNumber" class="form-control" />
+            <span asp-validation-for="PolicyNumber" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="IncidentDate" class="form-label"></label>
             <input asp-for="IncidentDate" class="form-control" />
+            <span asp-validation-for="IncidentDate" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="ClaimType" class="form-label"></label>
             <input asp-for="ClaimType" class="form-control" />
+            <span asp-validation-for="ClaimType" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="ClaimedAmount" class="form-label"></label>
             <input asp-for="ClaimedAmount" class="form-control" />
+            <span asp-validation-for="ClaimedAmount" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="EvidenceUrl" class="form-label"></label>
             <input asp-for="EvidenceUrl" class="form-control" placeholder="https://..." />
+            <span asp-validation-for="EvidenceUrl" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="EvidenceDocument" class="form-label">Evidence Document (Optional)</label>
             <input asp-for="EvidenceDocument" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+            <span asp-validation-for="EvidenceDocument" class="text-danger"></span>
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button class="btn btn-primary" type="submit">Create Claim</button>
@@ -135,9 +142,11 @@
     <h5>Assign Claim</h5>
     <form asp-action="Assign" method="post" class="row g-2" novalidate>
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-3">
             <label asp-for="AssignClaimNumber" class="form-label">Claim Number</label>
             <input asp-for="AssignClaimNumber" class="form-control" />
+            <span asp-validation-for="AssignClaimNumber" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="AssignAdjusterUserId" class="form-label">Adjuster User Id</label>
@@ -149,10 +158,12 @@
                     <option value="@option.Value">@option.Label</option>
                 }
             </select>
+            <span asp-validation-for="AssignAdjusterUserId" class="text-danger"></span>
         </div>
         <div class="col-md-4">
             <label asp-for="AssignNote" class="form-label">Assignment Note</label>
             <input asp-for="AssignNote" class="form-control" />
+            <span asp-validation-for="AssignNote" class="text-danger"></span>
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button class="btn btn-outline-primary" type="submit">Assign</button>
@@ -164,9 +175,11 @@
     <h5>Review Decision</h5>
     <form asp-action="Review" method="post" class="row g-2" novalidate>
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-3">
             <label asp-for="ReviewClaimNumber" class="form-label">Claim Number</label>
             <input asp-for="ReviewClaimNumber" class="form-control" />
+            <span asp-validation-for="ReviewClaimNumber" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="ReviewAction" class="form-label">Action</label>
@@ -177,14 +190,17 @@
                 <option value="reject">reject</option>
                 <option value="close">close</option>
             </select>
+            <span asp-validation-for="ReviewAction" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="ReviewApprovedAmount" class="form-label">Approved Amount</label>
             <input asp-for="ReviewApprovedAmount" class="form-control" />
+            <span asp-validation-for="ReviewApprovedAmount" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="ReviewReason" class="form-label">Reason</label>
             <input asp-for="ReviewReason" class="form-control" />
+            <span asp-validation-for="ReviewReason" class="text-danger"></span>
         </div>
         <div class="col-md-1 d-flex align-items-end">
             <button class="btn btn-outline-success" type="submit">Apply</button>

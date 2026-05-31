@@ -14,6 +14,8 @@ public class PremiumCollectionService(
 {
     public async Task<PremiumCollectionItemResponse> CreateMandateAsync(CreatePremiumMandateRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.PolicyNumber))
         {
             throw new InvalidOperationException("Policy number is required.");
@@ -50,10 +52,22 @@ public class PremiumCollectionService(
 
     public async Task<PremiumCollectionItemResponse> ScheduleCollectionAsync(string policyNumber, SchedulePremiumCollectionRequest request, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(policyNumber))
+        {
+            throw new InvalidOperationException("Policy number is required.");
+        }
+
+        ArgumentNullException.ThrowIfNull(request);
+
         var policy = await FindActivePolicyAsync(policyNumber, cancellationToken);
         if (request.DueDateUtc == default)
         {
             throw new InvalidOperationException("Due date is required.");
+        }
+
+        if (request.Amount is <= 0)
+        {
+            throw new InvalidOperationException("Amount must be greater than zero when provided.");
         }
 
         var transaction = new PremiumTransaction
@@ -221,6 +235,8 @@ public class PremiumCollectionService(
 
     public async Task<PremiumCollectionWebhookResponse> ProcessWebhookAsync(PremiumCollectionWebhookRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.EventId))
         {
             throw new InvalidOperationException("EventId is required.");
@@ -260,6 +276,7 @@ public class PremiumCollectionService(
 
         var reference = request.TransactionReference.Trim();
         var transaction = await dbContext.PremiumTransactions
+            .Include(x => x.Policy)
             .SingleOrDefaultAsync(x => x.TransactionReference == reference, cancellationToken);
 
         var now = DateTime.UtcNow;
@@ -316,9 +333,7 @@ public class PremiumCollectionService(
             webhookLog.ProcessingStatus = "AppliedPending";
         }
 
-        webhookLog.PolicyNumber = transaction.PolicyId > 0
-            ? (await dbContext.Policies.Where(x => x.Id == transaction.PolicyId).Select(x => x.PolicyNumber).SingleAsync(cancellationToken))
-            : webhookLog.PolicyNumber;
+        webhookLog.PolicyNumber = transaction.Policy?.PolicyNumber ?? webhookLog.PolicyNumber;
         webhookLog.ProcessedAtUtc = now;
         webhookLog.UpdatedAtUtc = now;
 
@@ -337,6 +352,12 @@ public class PremiumCollectionService(
 
     public async Task<PremiumReconciliationSummaryResponse> GetReconciliationSummaryAsync(DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
     {
+        if (fromUtc.HasValue && toUtc.HasValue && fromUtc.Value > toUtc.Value)
+        {
+            throw new InvalidOperationException("FromUtc must be less than or equal to ToUtc.");
+        }
+
+        // TODO: Validation Review - clarify maximum supported reconciliation window (for example 30/90/365 days).
         var end = (toUtc ?? DateTime.UtcNow).Date.AddDays(1).AddTicks(-1);
         var start = (fromUtc ?? end.AddDays(-7)).Date;
 
@@ -381,6 +402,7 @@ public class PremiumCollectionService(
     {
         var normalized = policyNumber.Trim().ToUpperInvariant();
         var policy = await dbContext.Policies
+            .AsNoTracking()
             .SingleOrDefaultAsync(x => x.PolicyNumber == normalized, cancellationToken);
 
         if (policy is null)

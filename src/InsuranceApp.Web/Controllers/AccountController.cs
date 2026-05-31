@@ -207,6 +207,12 @@ public class AccountController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["AuthError"] = "Invalid logout request.";
+            return RedirectToAction(nameof(Login));
+        }
+
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Index", "Home");
     }

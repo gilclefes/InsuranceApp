@@ -1,17 +1,20 @@
 using InsuranceApp.Application.Interfaces;
 using InsuranceApp.Contracts.Quotes;
+using InsuranceApp.Infrastructure.Caching;
 using InsuranceApp.Infrastructure.Persistence;
 using InsuranceApp.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace InsuranceApp.Web.Controllers;
 
 [AllowAnonymous]
-public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteService) : Controller
+public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteService, IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public async Task<IActionResult> Start(string code, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(code))
@@ -19,20 +22,25 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
             return RedirectToAction("Index", "Products");
         }
 
-        var product = await dbContext.ProductDefinitions
-            .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.ProductCode == code && x.IsActive, cancellationToken);
+        var normalizedCode = code.Trim().ToUpperInvariant();
+        var version = ProductCacheVersion.Get(memoryCache);
+        var cacheKey = $"quote:start:v{version}:{normalizedCode}";
+
+        var product = await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            entry.SlidingExpiration = TimeSpan.FromMinutes(2);
+
+            return await dbContext.ProductDefinitions
+                .AsNoTracking()
+                .Include(x => x.Riders.Where(r => r.IsActive))
+                .SingleOrDefaultAsync(x => x.ProductCode == normalizedCode && x.IsActive, cancellationToken);
+        });
 
         if (product is null)
         {
             return NotFound();
         }
-
-        var riders = await dbContext.ProductRiders
-            .AsNoTracking()
-            .Where(x => x.ProductDefinitionId == product.Id && x.IsActive)
-            .OrderBy(x => x.Name)
-            .ToListAsync(cancellationToken);
 
         var model = new GetQuoteViewModel
         {
@@ -41,7 +49,9 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
             ProductTypeId = (int)product.ProductType,
             ProductDescription = product.Description,
             MaxCoverageAmount = product.MaxCoverageAmount,
-            AvailableRiders = riders.Select(r => new RiderOption
+            AvailableRiders = product.Riders
+            .OrderBy(x => x.Name)
+            .Select(r => new RiderOption
             {
                 RiderCode = r.RiderCode,
                 Name = r.Name,
@@ -87,6 +97,7 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
     }
 
     [HttpGet]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public async Task<IActionResult> Result(string reference, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(reference))
@@ -126,9 +137,24 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
 
     private async Task ReloadProductMetadataAsync(GetQuoteViewModel model, CancellationToken cancellationToken)
     {
-        var product = await dbContext.ProductDefinitions
-            .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.ProductCode == model.ProductCode, cancellationToken);
+        if (string.IsNullOrWhiteSpace(model.ProductCode))
+        {
+            return;
+        }
+
+        var normalizedCode = model.ProductCode.Trim().ToUpperInvariant();
+        var version = ProductCacheVersion.Get(memoryCache);
+        var cacheKey = $"quote:start:v{version}:{normalizedCode}";
+        var product = await memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            entry.SlidingExpiration = TimeSpan.FromMinutes(2);
+
+            return await dbContext.ProductDefinitions
+                .AsNoTracking()
+                .Include(x => x.Riders.Where(r => r.IsActive))
+                .SingleOrDefaultAsync(x => x.ProductCode == normalizedCode && x.IsActive, cancellationToken);
+        });
 
         if (product is not null)
         {
@@ -139,9 +165,7 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
 
         if (model.AvailableRiders.Count == 0 && product is not null)
         {
-            model.AvailableRiders = await dbContext.ProductRiders
-                .AsNoTracking()
-                .Where(x => x.ProductDefinitionId == product.Id && x.IsActive)
+            model.AvailableRiders = product.Riders
                 .OrderBy(x => x.Name)
                 .Select(r => new RiderOption
                 {
@@ -150,7 +174,7 @@ public class QuoteController(InsuranceDbContext dbContext, IQuoteService quoteSe
                     AdjustmentType = r.AdjustmentType,
                     AdjustmentValue = r.AdjustmentValue
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
         }
     }
 }

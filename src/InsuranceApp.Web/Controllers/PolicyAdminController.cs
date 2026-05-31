@@ -63,7 +63,7 @@ public class PolicyAdminController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreatePolicyViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([Bind("QuoteReference,CustomerId,AssignedAgentId,CoverageType,InceptionDate,ExpiryDate,SupportingDocument")] CreatePolicyViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -206,6 +206,18 @@ public class PolicyAdminController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Endorse(string policyNumber, string note, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid endorsement input.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (string.IsNullOrWhiteSpace(policyNumber))
+        {
+            TempData["Error"] = "Policy number is required for endorsement.";
+            return RedirectToAction(nameof(Index));
+        }
+
         try
         {
             await policyIssuanceService.EndorsePolicyAsync(policyNumber, new EndorsePolicyRequest
@@ -228,6 +240,18 @@ public class PolicyAdminController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(string policyNumber, string reason, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid cancellation input.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (string.IsNullOrWhiteSpace(policyNumber))
+        {
+            TempData["Error"] = "Policy number is required for cancellation.";
+            return RedirectToAction(nameof(Index));
+        }
+
         try
         {
             await policyIssuanceService.CancelPolicyAsync(policyNumber, new CancelPolicyRequest { Reason = reason }, cancellationToken);

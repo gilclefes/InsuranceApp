@@ -14,6 +14,11 @@ public class PayoutsController(IPayoutService payoutService) : ControllerBase
     [Authorize(Roles = "Admin,Agent")]
     public async Task<IActionResult> Initiate([FromBody] InitiatePayoutRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await payoutService.InitiatePayoutAsync(request, cancellationToken);
@@ -50,6 +55,11 @@ public class PayoutsController(IPayoutService payoutService) : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RunReconciliation(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await payoutService.RunReconciliationAsync(cancellationToken);
         return Ok(result);
     }
@@ -58,6 +68,11 @@ public class PayoutsController(IPayoutService payoutService) : ControllerBase
     [HttpPost("webhooks/provider")]
     public async Task<IActionResult> ProcessWebhook([FromBody] PayoutWebhookRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await payoutService.ProcessWebhookAsync(request, cancellationToken);

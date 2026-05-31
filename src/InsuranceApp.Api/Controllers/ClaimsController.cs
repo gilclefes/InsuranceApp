@@ -13,6 +13,11 @@ public class ClaimsController(IClaimService claimService) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateClaimRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await claimService.CreateClaimAsync(request, cancellationToken);
@@ -49,6 +54,11 @@ public class ClaimsController(IClaimService claimService) : ControllerBase
     [Authorize(Roles = "Admin,Agent")]
     public async Task<IActionResult> Assign(string claimNumber, [FromBody] AssignClaimRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await claimService.AssignClaimAsync(claimNumber, request, cancellationToken);
@@ -64,6 +74,11 @@ public class ClaimsController(IClaimService claimService) : ControllerBase
     [Authorize(Roles = "Admin,Agent")]
     public async Task<IActionResult> Review(string claimNumber, [FromBody] ReviewClaimRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await claimService.ReviewClaimAsync(claimNumber, request, cancellationToken);

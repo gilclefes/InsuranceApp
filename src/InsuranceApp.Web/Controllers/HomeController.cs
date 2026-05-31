@@ -6,11 +6,13 @@ namespace InsuranceApp.Web.Controllers;
 
 public class HomeController : Controller
 {
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Index()
     {
         return View();
     }
 
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Privacy()
     {
         return View();

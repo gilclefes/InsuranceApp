@@ -4,12 +4,14 @@ namespace InsuranceApp.Web.Models;
 
 public sealed class LoginViewModel
 {
-    [Required]
+    [Required(AllowEmptyStrings = false)]
     [EmailAddress]
+    [StringLength(255)]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    [Required(AllowEmptyStrings = false)]
     [DataType(DataType.Password)]
+    [StringLength(100, MinimumLength = 8)]
     public string Password { get; set; } = string.Empty;
 
     public string? ReturnUrl { get; set; }

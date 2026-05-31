@@ -16,6 +16,11 @@ public class AuthController(IAuthService authService, IIdentityAuditLogger audit
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var response = await authService.RegisterAsync(request, BuildContext(), cancellationToken);
@@ -33,6 +38,11 @@ public class AuthController(IAuthService authService, IIdentityAuditLogger audit
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var response = await authService.LoginAsync(request, BuildContext(), cancellationToken);
@@ -55,6 +65,11 @@ public class AuthController(IAuthService authService, IIdentityAuditLogger audit
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var response = await authService.RefreshTokenAsync(request, BuildContext(), cancellationToken);
@@ -72,6 +87,11 @@ public class AuthController(IAuthService authService, IIdentityAuditLogger audit
     [HttpPost("request-otp")]
     public async Task<IActionResult> RequestOtp([FromBody] OtpRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var response = await authService.RequestOtpAsync(request, BuildContext(), cancellationToken);
@@ -89,6 +109,11 @@ public class AuthController(IAuthService authService, IIdentityAuditLogger audit
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp([FromBody] OtpVerifyRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var response = await authService.VerifyOtpAsync(request, cancellationToken);
@@ -107,6 +132,11 @@ public class AuthController(IAuthService authService, IIdentityAuditLogger audit
     [HttpPost("revoke-all")]
     public async Task<IActionResult> RevokeAll(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
         if (string.IsNullOrWhiteSpace(userId))
         {

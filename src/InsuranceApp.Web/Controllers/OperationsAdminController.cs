@@ -19,6 +19,12 @@ public class OperationsAdminController(IOperationsHardeningService operationsHar
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RunDrill(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid drill command.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var readiness = await operationsHardeningService.GetReadinessSummaryAsync(cancellationToken);
         var drill = await operationsHardeningService.RunFailoverDrillAsync(cancellationToken);
 

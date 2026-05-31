@@ -13,6 +13,11 @@ public class PoliciesController(IPolicyIssuanceService policyIssuanceService) : 
     [HttpPost("issue-from-quote")]
     public async Task<IActionResult> IssueFromQuote([FromBody] IssuePolicyFromQuoteRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var response = await policyIssuanceService.IssueFromQuoteAsync(request, cancellationToken);
@@ -52,6 +57,11 @@ public class PoliciesController(IPolicyIssuanceService policyIssuanceService) : 
     [HttpPost("{policyNumber}/endorse")]
     public async Task<IActionResult> Endorse(string policyNumber, [FromBody] EndorsePolicyRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await policyIssuanceService.EndorsePolicyAsync(policyNumber, request, cancellationToken);
@@ -66,6 +76,11 @@ public class PoliciesController(IPolicyIssuanceService policyIssuanceService) : 
     [HttpPost("{policyNumber}/cancel")]
     public async Task<IActionResult> Cancel(string policyNumber, [FromBody] CancelPolicyRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await policyIssuanceService.CancelPolicyAsync(policyNumber, request, cancellationToken);
@@ -81,6 +96,11 @@ public class PoliciesController(IPolicyIssuanceService policyIssuanceService) : 
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RunRenewalReminders(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await policyIssuanceService.RunRenewalReminderCycleAsync(cancellationToken);
         return Ok(result);
     }

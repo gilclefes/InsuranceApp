@@ -18,6 +18,11 @@ public class UssdController : ControllerBase
     [HttpPost]
     public ActionResult<UssdResponse> Handle([FromBody] UssdRequest request)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var steps = string.IsNullOrWhiteSpace(request.Text)
             ? Array.Empty<string>()
             : request.Text.Split('*', StringSplitOptions.RemoveEmptyEntries);

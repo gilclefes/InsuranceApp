@@ -15,8 +15,25 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
 {
     public async Task<IssuePolicyFromQuoteResponse> IssueFromQuoteAsync(IssuePolicyFromQuoteRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.QuoteReference))
+        {
+            throw new InvalidOperationException("Quote reference is required.");
+        }
+
+        if (request.CustomerId <= 0)
+        {
+            throw new InvalidOperationException("CustomerId must be greater than zero.");
+        }
+
+        if (request.InceptionDate.Date >= request.ExpiryDate.Date)
+        {
+            throw new InvalidOperationException("Inception date must be before expiry date.");
+        }
+
         var quote = await dbContext.QuoteRecords
-            .SingleOrDefaultAsync(x => x.QuoteReference == request.QuoteReference, cancellationToken)
+            .SingleOrDefaultAsync(x => x.QuoteReference == request.QuoteReference.Trim(), cancellationToken)
             ?? throw new InvalidOperationException("Quote reference not found.");
 
         if (!string.Equals(quote.Status, "Quoted", StringComparison.OrdinalIgnoreCase))
@@ -50,8 +67,8 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
             CoverageType = string.IsNullOrWhiteSpace(request.CoverageType) ? "Standard" : request.CoverageType,
             PremiumAmount = quote.TotalPremium,
             CurrencyCode = quote.CurrencyCode,
-            InceptionDate = request.InceptionDate,
-            ExpiryDate = request.ExpiryDate,
+            InceptionDate = DateTime.SpecifyKind(request.InceptionDate, DateTimeKind.Utc),
+            ExpiryDate = DateTime.SpecifyKind(request.ExpiryDate, DateTimeKind.Utc),
             Status = PolicyStatus.Active
         };
 
@@ -91,11 +108,19 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
 
     public async Task<PolicyDocumentResponse> GetPolicyDocumentAsync(string policyNumber, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(policyNumber))
+        {
+            throw new InvalidOperationException("Policy number is required.");
+        }
+
+        var normalized = policyNumber.Trim();
         var policy = await dbContext.Policies
-            .SingleOrDefaultAsync(x => x.PolicyNumber == policyNumber, cancellationToken)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PolicyNumber == normalized, cancellationToken)
             ?? throw new InvalidOperationException("Policy not found.");
 
         var document = await dbContext.PolicyDocuments
+            .AsNoTracking()
             .Where(x => x.PolicyId == policy.Id)
             .OrderByDescending(x => x.GeneratedAtUtc)
             .FirstOrDefaultAsync(cancellationToken)
@@ -159,6 +184,14 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
 
     public async Task<PolicyOperationResponse> EndorsePolicyAsync(string policyNumber, EndorsePolicyRequest request, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(policyNumber))
+        {
+            throw new InvalidOperationException("Policy number is required.");
+        }
+
+        ArgumentNullException.ThrowIfNull(request);
+
+        // TODO: Validation Review - confirm acceptable premium adjustment bounds per product and regulator guidance.
         var policy = await dbContext.Policies
             .SingleOrDefaultAsync(x => x.PolicyNumber == policyNumber, cancellationToken)
             ?? throw new InvalidOperationException("Policy not found.");
@@ -186,6 +219,13 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
 
     public async Task<PolicyOperationResponse> CancelPolicyAsync(string policyNumber, CancelPolicyRequest request, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(policyNumber))
+        {
+            throw new InvalidOperationException("Policy number is required.");
+        }
+
+        ArgumentNullException.ThrowIfNull(request);
+
         var policy = await dbContext.Policies
             .SingleOrDefaultAsync(x => x.PolicyNumber == policyNumber, cancellationToken)
             ?? throw new InvalidOperationException("Policy not found.");
@@ -212,30 +252,52 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
     {
         var from = DateTime.UtcNow.Date;
         var to = DateTime.UtcNow.Date.AddDays(30);
+        var now = DateTime.UtcNow;
 
         var policies = await dbContext.Policies
+            .AsNoTracking()
             .Where(x => x.Status == PolicyStatus.Active && x.ExpiryDate >= from && x.ExpiryDate <= to)
+            .ToListAsync(cancellationToken);
+
+        var policyIds = policies.Select(x => x.Id).ToArray();
+        var recentReminderCutoff = now.AddDays(-7);
+        var recentlyNotifiedPolicyIds = policyIds.Length == 0
+            ? new HashSet<long>()
+            : (await dbContext.PolicyNotifications
+                .AsNoTracking()
+                .Where(x => policyIds.Contains(x.PolicyId) && x.TemplateKey == "RenewalReminder" && x.SentAtUtc >= recentReminderCutoff)
+                .Select(x => x.PolicyId)
+                .Distinct()
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        var customerIds = policies.Select(x => x.CustomerId).Distinct().ToArray();
+        var customersById = customerIds.Length == 0
+            ? new Dictionary<long, Customer>()
+            : await dbContext.Customers
+                .AsNoTracking()
+                .Where(x => customerIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var reminderTemplates = await dbContext.NotificationTemplates
+            .AsNoTracking()
+            .Where(x => x.TemplateKey == "RenewalReminder" && x.IsActive)
             .ToListAsync(cancellationToken);
 
         var sentCount = 0;
         foreach (var policy in policies)
         {
-            var hasRecentReminder = await dbContext.PolicyNotifications.AnyAsync(
-                x => x.PolicyId == policy.Id && x.TemplateKey == "RenewalReminder" && x.SentAtUtc >= DateTime.UtcNow.AddDays(-7),
-                cancellationToken);
-
-            if (hasRecentReminder)
+            if (recentlyNotifiedPolicyIds.Contains(policy.Id))
             {
                 continue;
             }
 
-            var customer = await dbContext.Customers.SingleOrDefaultAsync(x => x.Id == policy.CustomerId, cancellationToken);
-            if (customer is null)
+            if (!customersById.TryGetValue(policy.CustomerId, out var customer))
             {
                 continue;
             }
 
-            await CreateNotificationsAsync(policy, customer, "RenewalReminder", cancellationToken);
+            CreateNotifications(policy, customer, "RenewalReminder", reminderTemplates, now);
             sentCount++;
         }
 
@@ -295,8 +357,19 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
     private async Task CreateNotificationsAsync(Policy policy, Customer customer, string templateKey, CancellationToken cancellationToken)
     {
         var templates = await dbContext.NotificationTemplates
+            .AsNoTracking()
             .Where(x => x.TemplateKey == templateKey && x.IsActive)
             .ToListAsync(cancellationToken);
+
+        CreateNotifications(policy, customer, templateKey, templates, DateTime.UtcNow);
+    }
+
+    private void CreateNotifications(Policy policy, Customer customer, string templateKey, IReadOnlyCollection<NotificationTemplate> templates, DateTime now)
+    {
+        if (templates.Count == 0)
+        {
+            return;
+        }
 
         foreach (var template in templates)
         {
@@ -319,7 +392,7 @@ public class QuotePolicyIssuanceService(InsuranceDbContext dbContext) : IPolicyI
                 Subject = subject,
                 Body = body,
                 Status = "Sent",
-                SentAtUtc = DateTime.UtcNow
+                SentAtUtc = now
             });
         }
     }

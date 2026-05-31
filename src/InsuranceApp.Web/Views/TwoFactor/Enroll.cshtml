@@ -22,6 +22,7 @@
         <form method="post">
             <input type="hidden" asp-for="SharedKey" />
             <input type="hidden" asp-for="AuthenticatorUri" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-3">
                 <label asp-for="VerificationCode" class="form-label"></label>
                 <input asp-for="VerificationCode" class="form-control" autocomplete="off" inputmode="numeric" />
@@ -32,3 +33,7 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

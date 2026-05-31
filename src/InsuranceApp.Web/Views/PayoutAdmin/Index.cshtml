@@ -39,25 +39,31 @@
     <h5>Initiate Payout</h5>
     <form asp-action="Initiate" method="post" class="row g-2" novalidate>
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-3">
             <label asp-for="ClaimNumber" class="form-label"></label>
             <input asp-for="ClaimNumber" class="form-control" />
+            <span asp-validation-for="ClaimNumber" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="Amount" class="form-label"></label>
             <input asp-for="Amount" class="form-control" />
+            <span asp-validation-for="Amount" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="DestinationChannel" class="form-label"></label>
             <input asp-for="DestinationChannel" class="form-control" />
+            <span asp-validation-for="DestinationChannel" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="DestinationAccount" class="form-label"></label>
             <input asp-for="DestinationAccount" class="form-control" />
+            <span asp-validation-for="DestinationAccount" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="ExternalReference" class="form-label"></label>
             <input asp-for="ExternalReference" class="form-control" />
+            <span asp-validation-for="ExternalReference" class="text-danger"></span>
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button class="btn btn-primary" type="submit">Initiate</button>
@@ -76,13 +82,16 @@
     <h5>Payout Webhook Simulation</h5>
     <form asp-action="ProcessWebhook" method="post" class="row g-2" novalidate>
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-3">
             <label asp-for="WebhookEventId" class="form-label">Event Id</label>
             <input asp-for="WebhookEventId" class="form-control" />
+            <span asp-validation-for="WebhookEventId" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="WebhookPayoutReference" class="form-label">Payout Reference</label>
             <input asp-for="WebhookPayoutReference" class="form-control" />
+            <span asp-validation-for="WebhookPayoutReference" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="WebhookStatus" class="form-label">Status</label>
@@ -91,6 +100,7 @@
                 <option value="failed">failed</option>
                 <option value="processing">processing</option>
             </select>
+            <span asp-validation-for="WebhookStatus" class="text-danger"></span>
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button class="btn btn-outline-success" type="submit">Process</button>

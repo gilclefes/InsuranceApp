@@ -32,7 +32,7 @@ public class PremiumAdminController(IPremiumCollectionService premiumCollectionS
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateMandate(PremiumAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateMandate([Bind("PolicyNumber,DueDateUtc,Provider,PaymentChannel")] PremiumAdminViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -63,7 +63,7 @@ public class PremiumAdminController(IPremiumCollectionService premiumCollectionS
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Schedule(PremiumAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Schedule([Bind("PolicyNumber,DueDateUtc,Amount,Provider,PaymentChannel")] PremiumAdminViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -95,6 +95,12 @@ public class PremiumAdminController(IPremiumCollectionService premiumCollectionS
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RunDue(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid run-due request.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var result = await premiumCollectionService.RunDueCollectionsAsync(cancellationToken);
         TempData["Success"] = $"Run complete. Succeeded: {result.ItemsSucceeded}, Failed: {result.ItemsFailed}.";
         return RedirectToAction(nameof(Index));
@@ -104,6 +110,12 @@ public class PremiumAdminController(IPremiumCollectionService premiumCollectionS
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RetryFailed(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid retry request.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var result = await premiumCollectionService.RetryFailedCollectionsAsync(cancellationToken);
         TempData["Success"] = $"Retry complete. Recovered: {result.ItemsSucceeded}.";
         return RedirectToAction(nameof(Index));
@@ -111,8 +123,14 @@ public class PremiumAdminController(IPremiumCollectionService premiumCollectionS
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ProcessWebhook(PremiumAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> ProcessWebhook([Bind("PolicyNumber,Provider,WebhookEventId,WebhookTransactionReference,WebhookStatus")] PremiumAdminViewModel model, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            model.Items = await premiumCollectionService.ListPolicyCollectionsAsync(model.PolicyNumber, cancellationToken);
+            return View("Index", model);
+        }
+
         try
         {
             var eventId = string.IsNullOrWhiteSpace(model.WebhookEventId)

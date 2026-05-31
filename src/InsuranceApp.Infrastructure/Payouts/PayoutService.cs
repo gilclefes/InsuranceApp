@@ -11,6 +11,8 @@ public class PayoutService(InsuranceDbContext dbContext) : IPayoutService
 {
     public async Task<PayoutResponse> InitiatePayoutAsync(InitiatePayoutRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.ClaimNumber))
         {
             throw new InvalidOperationException("Claim number is required.");
@@ -87,6 +89,11 @@ public class PayoutService(InsuranceDbContext dbContext) : IPayoutService
 
     public async Task<PayoutResponse> GetPayoutAsync(string payoutReference, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(payoutReference))
+        {
+            throw new InvalidOperationException("Payout reference is required.");
+        }
+
         var payout = await dbContext.PayoutTransactions
             .AsNoTracking()
             .Include(x => x.Claim)
@@ -98,6 +105,11 @@ public class PayoutService(InsuranceDbContext dbContext) : IPayoutService
 
     public async Task<IReadOnlyCollection<PayoutResponse>> ListPayoutsAsync(string? status, string? claimNumber, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
     {
+        if (fromUtc.HasValue && toUtc.HasValue && fromUtc.Value > toUtc.Value)
+        {
+            throw new InvalidOperationException("FromUtc must be less than or equal to ToUtc.");
+        }
+
         var query = dbContext.PayoutTransactions.AsNoTracking().Include(x => x.Claim).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<PaymentStatus>(status, true, out var parsed))
@@ -203,14 +215,26 @@ public class PayoutService(InsuranceDbContext dbContext) : IPayoutService
 
     public async Task<PayoutWebhookResponse> ProcessWebhookAsync(PayoutWebhookRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (string.IsNullOrWhiteSpace(request.EventId))
         {
             throw new InvalidOperationException("EventId is required.");
         }
 
+        if (string.IsNullOrWhiteSpace(request.PayoutReference))
+        {
+            throw new InvalidOperationException("PayoutReference is required.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.Signature))
         {
             throw new InvalidOperationException("Webhook signature is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Status))
+        {
+            throw new InvalidOperationException("Status is required.");
         }
 
         var eventId = request.EventId.Trim();

@@ -14,14 +14,20 @@ public class AgentPortalService(InsuranceDbContext dbContext, IOptions<AgentComm
     public async Task<AgentPortfolioResponse> GetPortfolioAsync(string agentUserId, CancellationToken cancellationToken = default)
     {
         var customers = await dbContext.Customers
+            .AsNoTracking()
             .Where(c => c.RegisteredByAgentId == agentUserId)
             .OrderByDescending(c => c.CreatedAtUtc)
             .ToListAsync(cancellationToken);
 
         var customerIds = customers.Select(c => c.Id).ToList();
         var policies = await dbContext.Policies
+            .AsNoTracking()
             .Where(p => customerIds.Contains(p.CustomerId) || p.AssignedAgentId == agentUserId)
             .ToListAsync(cancellationToken);
+
+        var policyCountByCustomerId = policies
+            .GroupBy(p => p.CustomerId)
+            .ToDictionary(g => g.Key, g => g.Count());
 
         var summaries = customers.Select(c => new AgentCustomerSummary
         {
@@ -30,7 +36,7 @@ public class AgentPortalService(InsuranceDbContext dbContext, IOptions<AgentComm
             FullName = $"{c.FirstName} {c.LastName}".Trim(),
             PhoneNumber = c.PhoneNumber,
             Email = c.Email,
-            PolicyCount = policies.Count(p => p.CustomerId == c.Id),
+            PolicyCount = policyCountByCustomerId.TryGetValue(c.Id, out var count) ? count : 0,
             CreatedAtUtc = c.CreatedAtUtc
         }).ToList();
 
@@ -49,6 +55,7 @@ public class AgentPortalService(InsuranceDbContext dbContext, IOptions<AgentComm
     {
         var rate = _options.DefaultCommissionRate;
         var policies = await dbContext.Policies
+            .AsNoTracking()
             .Include(p => p.Customer)
             .Where(p => p.AssignedAgentId == agentUserId && p.Status == PolicyStatus.Active)
             .OrderByDescending(p => p.InceptionDate)

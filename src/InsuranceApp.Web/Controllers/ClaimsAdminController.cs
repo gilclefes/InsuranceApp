@@ -52,7 +52,7 @@ public class ClaimsAdminController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ClaimsAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([Bind("StatusFilter,AdjusterFilter,PolicyFilter,PolicyNumber,IncidentDate,ClaimType,ClaimedAmount,EvidenceUrl,EvidenceDocument")] ClaimsAdminViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -135,8 +135,16 @@ public class ClaimsAdminController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Assign(ClaimsAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Assign([Bind("StatusFilter,AdjusterFilter,PolicyFilter,AssignClaimNumber,AssignAdjusterUserId,AssignNote")] ClaimsAdminViewModel model, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            model.Claims = await claimService.ListClaimsAsync(model.StatusFilter, model.AdjusterFilter, model.PolicyFilter, cancellationToken);
+            model.AdjusterOptions = await LoadAdjusterOptionsAsync(cancellationToken);
+            model.AdjusterDisplayById = model.AdjusterOptions.ToDictionary(x => x.Value, x => x.Label);
+            return View("Index", model);
+        }
+
         try
         {
             await claimService.AssignClaimAsync(model.AssignClaimNumber, new AssignClaimRequest
@@ -157,8 +165,16 @@ public class ClaimsAdminController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Review(ClaimsAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Review([Bind("StatusFilter,AdjusterFilter,PolicyFilter,ReviewClaimNumber,ReviewAction,ReviewApprovedAmount,ReviewReason")] ClaimsAdminViewModel model, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            model.Claims = await claimService.ListClaimsAsync(model.StatusFilter, model.AdjusterFilter, model.PolicyFilter, cancellationToken);
+            model.AdjusterOptions = await LoadAdjusterOptionsAsync(cancellationToken);
+            model.AdjusterDisplayById = model.AdjusterOptions.ToDictionary(x => x.Value, x => x.Label);
+            return View("Index", model);
+        }
+
         try
         {
             await claimService.ReviewClaimAsync(model.ReviewClaimNumber, new ReviewClaimRequest

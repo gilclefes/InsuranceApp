@@ -13,6 +13,11 @@ public class PremiumCollectionsController(IPremiumCollectionService premiumColle
     [HttpPost("mandates")]
     public async Task<IActionResult> CreateMandate([FromBody] CreatePremiumMandateRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await premiumCollectionService.CreateMandateAsync(request, cancellationToken);
@@ -27,6 +32,11 @@ public class PremiumCollectionsController(IPremiumCollectionService premiumColle
     [HttpPost("{policyNumber}/schedule")]
     public async Task<IActionResult> Schedule(string policyNumber, [FromBody] SchedulePremiumCollectionRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await premiumCollectionService.ScheduleCollectionAsync(policyNumber, request, cancellationToken);
@@ -49,6 +59,11 @@ public class PremiumCollectionsController(IPremiumCollectionService premiumColle
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RunDue(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await premiumCollectionService.RunDueCollectionsAsync(cancellationToken);
         return Ok(result);
     }
@@ -57,6 +72,11 @@ public class PremiumCollectionsController(IPremiumCollectionService premiumColle
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RetryFailed(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await premiumCollectionService.RetryFailedCollectionsAsync(cancellationToken);
         return Ok(result);
     }
@@ -66,6 +86,11 @@ public class PremiumCollectionsController(IPremiumCollectionService premiumColle
     [HttpPost("webhooks/provider")]
     public async Task<IActionResult> ProcessWebhook([FromBody] PremiumCollectionWebhookRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await premiumCollectionService.ProcessWebhookAsync(request, cancellationToken);

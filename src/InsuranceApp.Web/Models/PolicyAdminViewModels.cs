@@ -14,15 +14,21 @@ public sealed class PolicyDashboardViewModel
 
 public sealed class CreatePolicyViewModel
 {
-    [Required]
+    [Required(AllowEmptyStrings = false)]
+    [RegularExpression(@".*\S.*", ErrorMessage = "Quote reference cannot be empty.")]
+    [StringLength(40)]
     public string QuoteReference { get; set; } = string.Empty;
 
     [Required]
+    [Range(1, long.MaxValue)]
     public long CustomerId { get; set; }
 
+    [StringLength(64)]
     public string AssignedAgentId { get; set; } = string.Empty;
 
-    [Required]
+    [Required(AllowEmptyStrings = false)]
+    [RegularExpression(@".*\S.*", ErrorMessage = "Coverage type cannot be empty.")]
+    [StringLength(100)]
     public string CoverageType { get; set; } = "Standard";
 
     [Required]

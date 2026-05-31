@@ -33,8 +33,13 @@ public class TwoFactorController(UserManager<ApplicationUser> userManager, UrlEn
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Enroll(TwoFactorEnrollViewModel model)
+    public async Task<IActionResult> Enroll([Bind("SharedKey,AuthenticatorUri,VerificationCode")] TwoFactorEnrollViewModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
         var user = await userManager.GetUserAsync(User);
         if (user is null) return RedirectToAction("Login", "Account");
         if (string.IsNullOrWhiteSpace(model.VerificationCode))
@@ -70,6 +75,12 @@ public class TwoFactorController(UserManager<ApplicationUser> userManager, UrlEn
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Disable()
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["StatusMessage"] = "Invalid two-factor disable request.";
+            return RedirectToAction("Status");
+        }
+
         var user = await userManager.GetUserAsync(User);
         if (user is null) return RedirectToAction("Login", "Account");
         await userManager.SetTwoFactorEnabledAsync(user, false);

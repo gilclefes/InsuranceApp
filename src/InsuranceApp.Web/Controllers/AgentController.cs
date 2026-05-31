@@ -44,7 +44,7 @@ public class AgentController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Onboard(AgentOnboardViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Onboard([Bind("Request,CustomerIntakeForm")] AgentOnboardViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {

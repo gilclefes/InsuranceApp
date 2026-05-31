@@ -23,7 +23,7 @@ public class PayoutAdminController(IPayoutService payoutService) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Initiate(PayoutAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> Initiate([Bind("StatusFilter,ClaimFilter,ClaimNumber,Amount,DestinationChannel,DestinationAccount,ExternalReference")] PayoutAdminViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -56,6 +56,12 @@ public class PayoutAdminController(IPayoutService payoutService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reconcile(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid reconciliation request.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var result = await payoutService.RunReconciliationAsync(cancellationToken);
         TempData["Success"] = $"Reconciliation run complete. Success: {result.ReconciledCount}, Failed: {result.FailedCount}.";
         return RedirectToAction(nameof(Index));
@@ -63,8 +69,14 @@ public class PayoutAdminController(IPayoutService payoutService) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ProcessWebhook(PayoutAdminViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> ProcessWebhook([Bind("StatusFilter,ClaimFilter,WebhookEventId,WebhookPayoutReference,WebhookStatus")] PayoutAdminViewModel model, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            model.Payouts = await payoutService.ListPayoutsAsync(model.StatusFilter, model.ClaimFilter, null, null, cancellationToken);
+            return View("Index", model);
+        }
+
         try
         {
             var eventId = string.IsNullOrWhiteSpace(model.WebhookEventId)

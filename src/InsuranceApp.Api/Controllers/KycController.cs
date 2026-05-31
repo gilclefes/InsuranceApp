@@ -11,6 +11,11 @@ public class KycController(IKycService kycService, IIdentityAuditLogger auditLog
     [HttpPost("verify-ghana-card")]
     public async Task<IActionResult> VerifyGhanaCard([FromBody] GhanaCardVerificationRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var result = await kycService.VerifyGhanaCardAsync(request, cancellationToken);
         await auditLogger.LogAsync(
             "Kyc.VerifyGhanaCard",

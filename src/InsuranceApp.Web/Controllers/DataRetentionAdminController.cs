@@ -19,6 +19,12 @@ public class DataRetentionAdminController(IDataRetentionService dataRetentionSer
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Run(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid retention command.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var result = await dataRetentionService.RunRetentionAsync(cancellationToken);
         TempData["Success"] =
             $"Retention completed. OTP deleted: {result.DeletedOtpChallenges}, Tokens deleted: {result.DeletedRefreshTokens}, Audit anonymized: {result.AnonymizedIdentityAuditRows}.";

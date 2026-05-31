@@ -51,22 +51,27 @@
 <form asp-action="CreateMandate" method="post" class="card p-3 mb-3" novalidate>
     @Html.AntiForgeryToken()
     <h5>Capture Mandate</h5>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="row g-2">
         <div class="col-md-3">
             <label asp-for="PolicyNumber" class="form-label"></label>
             <input asp-for="PolicyNumber" class="form-control" />
+            <span asp-validation-for="PolicyNumber" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="Provider" class="form-label"></label>
             <input asp-for="Provider" class="form-control" />
+            <span asp-validation-for="Provider" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="PaymentChannel" class="form-label"></label>
             <input asp-for="PaymentChannel" class="form-control" />
+            <span asp-validation-for="PaymentChannel" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="DueDateUtc" class="form-label">First Due Date</label>
             <input asp-for="DueDateUtc" class="form-control" />
+            <span asp-validation-for="DueDateUtc" class="text-danger"></span>
         </div>
     </div>
     <div class="mt-2">
@@ -77,10 +82,12 @@
 <form asp-action="Schedule" method="post" class="card p-3 mb-3" novalidate>
     @Html.AntiForgeryToken()
     <h5>Schedule Collection</h5>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="row g-2">
         <div class="col-md-3">
             <label asp-for="PolicyNumber" class="form-label"></label>
             <input asp-for="PolicyNumber" class="form-control" />
+            <span asp-validation-for="PolicyNumber" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="Amount" class="form-label"></label>
@@ -90,14 +97,17 @@
         <div class="col-md-3">
             <label asp-for="Provider" class="form-label"></label>
             <input asp-for="Provider" class="form-control" />
+            <span asp-validation-for="Provider" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="PaymentChannel" class="form-label"></label>
             <input asp-for="PaymentChannel" class="form-control" />
+            <span asp-validation-for="PaymentChannel" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="DueDateUtc" class="form-label"></label>
             <input asp-for="DueDateUtc" class="form-control" />
+            <span asp-validation-for="DueDateUtc" class="text-danger"></span>
         </div>
     </div>
     <div class="mt-2">
@@ -120,14 +130,17 @@
     @Html.AntiForgeryToken()
     <h5>Webhook Processing (Idempotent)</h5>
     <p class="text-muted mb-2">Use this form to simulate provider webhook callbacks and verify duplicate-event handling.</p>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="row g-2">
         <div class="col-md-3">
             <label asp-for="WebhookEventId" class="form-label">Event ID</label>
             <input asp-for="WebhookEventId" class="form-control" placeholder="EVT-..." />
+            <span asp-validation-for="WebhookEventId" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="WebhookTransactionReference" class="form-label">Transaction Reference</label>
             <input asp-for="WebhookTransactionReference" class="form-control" placeholder="COL-POL-..." />
+            <span asp-validation-for="WebhookTransactionReference" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="WebhookStatus" class="form-label">Status</label>
@@ -136,10 +149,12 @@
                 <option value="failed">failed</option>
                 <option value="processing">processing</option>
             </select>
+            <span asp-validation-for="WebhookStatus" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="Provider" class="form-label">Provider</label>
             <input asp-for="Provider" class="form-control" />
+            <span asp-validation-for="Provider" class="text-danger"></span>
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button type="submit" class="btn btn-outline-success w-100">Process Webhook</button>

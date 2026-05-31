@@ -15,6 +15,11 @@ public class QuotesController(IQuoteService quoteService) : ControllerBase
     [HttpPost("generate")]
     public async Task<IActionResult> Generate([FromBody] GenerateQuoteRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await quoteService.GenerateQuoteAsync(request, cancellationToken);
@@ -58,6 +63,11 @@ public class QuotesController(IQuoteService quoteService) : ControllerBase
     [HttpPost("{quoteReference}/reprice")]
     public async Task<IActionResult> Reprice(string quoteReference, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await quoteService.RepriceQuoteAsync(quoteReference, cancellationToken);
@@ -73,6 +83,11 @@ public class QuotesController(IQuoteService quoteService) : ControllerBase
     [HttpPost("{quoteReference}/expire")]
     public async Task<IActionResult> Expire(string quoteReference, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             var result = await quoteService.ExpireQuoteAsync(quoteReference, cancellationToken);

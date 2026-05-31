@@ -1,22 +1,27 @@
 using InsuranceApp.Contracts.Products;
 using InsuranceApp.Domain.Entities;
 using InsuranceApp.Domain.Enums;
+using InsuranceApp.Infrastructure.Caching;
 using InsuranceApp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace InsuranceApp.Api.Controllers;
 
 [ApiController]
 [Authorize(Roles = "Admin")]
 [Route("api/v1/admin/products")]
-public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBase
+public class ProductAdminController(InsuranceDbContext dbContext, IMemoryCache? cache = null) : ControllerBase
 {
+    private readonly IMemoryCache memoryCache = cache ?? new MemoryCache(new MemoryCacheOptions());
+
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken cancellationToken)
     {
         var items = await dbContext.ProductDefinitions
+            .AsNoTracking()
             .OrderBy(x => x.ProductCode)
             .Select(x => new ProductDefinitionResponse
             {
@@ -47,6 +52,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProductDefinitionRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var exists = await dbContext.ProductDefinitions.AnyAsync(x => x.ProductCode == request.ProductCode, cancellationToken);
         if (exists)
         {
@@ -76,6 +86,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
 
         dbContext.ProductDefinitions.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(MapToResponse(entity));
     }
@@ -83,6 +94,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPut("{id:long}")]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateProductDefinitionRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var entity = await dbContext.ProductDefinitions.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null)
         {
@@ -106,6 +122,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         entity.IsActive = request.IsActive;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(MapToResponse(entity));
     }
@@ -143,6 +160,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
 
         entity.IsActive = false;
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new { message = "Product deactivated." });
     }
@@ -157,6 +175,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         }
 
         var items = await dbContext.ProductRiskRules
+            .AsNoTracking()
             .Where(x => x.ProductDefinitionId == id)
             .OrderBy(x => x.ParameterName)
             .ThenBy(x => x.Id)
@@ -229,6 +248,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPost("{id:long}/risk-rules")]
     public async Task<IActionResult> CreateRiskRule(long id, [FromBody] CreateProductRiskRuleRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var productExists = await dbContext.ProductDefinitions.AnyAsync(x => x.Id == id, cancellationToken);
         if (!productExists)
         {
@@ -248,6 +272,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
 
         dbContext.ProductRiskRules.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new ProductRiskRuleResponse
         {
@@ -265,6 +290,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPut("{id:long}/risk-rules/{ruleId:long}")]
     public async Task<IActionResult> UpdateRiskRule(long id, long ruleId, [FromBody] UpdateProductRiskRuleRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var entity = await dbContext.ProductRiskRules
             .SingleOrDefaultAsync(x => x.Id == ruleId && x.ProductDefinitionId == id, cancellationToken);
 
@@ -281,6 +311,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         entity.Reason = request.Reason;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new ProductRiskRuleResponse
         {
@@ -308,6 +339,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
 
         dbContext.ProductRiskRules.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new { message = "Risk rule deleted." });
     }
@@ -322,6 +354,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         }
 
         var items = await dbContext.ProductRiders
+            .AsNoTracking()
             .Where(x => x.ProductDefinitionId == id)
             .OrderBy(x => x.RiderCode)
             .Select(x => new ProductRiderResponse
@@ -342,6 +375,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPost("{id:long}/riders")]
     public async Task<IActionResult> CreateRider(long id, [FromBody] CreateProductRiderRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var productExists = await dbContext.ProductDefinitions.AnyAsync(x => x.Id == id, cancellationToken);
         if (!productExists)
         {
@@ -367,6 +405,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
 
         dbContext.ProductRiders.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new ProductRiderResponse
         {
@@ -383,6 +422,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPut("{id:long}/riders/{riderId:long}")]
     public async Task<IActionResult> UpdateRider(long id, long riderId, [FromBody] UpdateProductRiderRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var entity = await dbContext.ProductRiders
             .SingleOrDefaultAsync(x => x.Id == riderId && x.ProductDefinitionId == id, cancellationToken);
 
@@ -397,6 +441,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         entity.IsActive = request.IsActive;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new ProductRiderResponse
         {
@@ -423,6 +468,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
 
         entity.IsActive = false;
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new { message = "Rider deactivated." });
     }
@@ -430,6 +476,11 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
     [HttpPost("risk-rules/bulk-upsert")]
     public async Task<IActionResult> BulkUpsertRiskRules([FromBody] BulkUpsertProductRiskRulesRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var productExists = await dbContext.ProductDefinitions.AnyAsync(x => x.Id == request.ProductDefinitionId, cancellationToken);
         if (!productExists)
         {
@@ -483,6 +534,7 @@ public class ProductAdminController(InsuranceDbContext dbContext) : ControllerBa
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        ProductCacheVersion.Bump(memoryCache);
 
         return Ok(new BulkUpsertProductRiskRulesResponse
         {

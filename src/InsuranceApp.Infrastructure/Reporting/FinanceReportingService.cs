@@ -13,6 +13,7 @@ public class FinanceReportingService(InsuranceDbContext dbContext) : IFinanceRep
         var now = DateTime.UtcNow;
 
         var statusCounts = await dbContext.Policies
+            .AsNoTracking()
             .GroupBy(p => p.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
@@ -25,6 +26,7 @@ public class FinanceReportingService(InsuranceDbContext dbContext) : IFinanceRep
         var lapseRatio = denominator == 0 ? 0m : Math.Round((decimal)lapsed / denominator, 4);
 
         var openClaims = await dbContext.Claims
+            .AsNoTracking()
             .Where(c => c.Status == ClaimStatus.Filed
                      || c.Status == ClaimStatus.UnderReview
                      || c.Status == ClaimStatus.AwaitingDocuments

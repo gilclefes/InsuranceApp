@@ -13,6 +13,8 @@
     @{
         var currentController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty).ToLowerInvariant();
         var currentAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty).ToLowerInvariant();
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
+        var showSidebar = isAuthenticated;
 
         var isHome = currentController == "home" && currentAction == "index";
         var isProducts = currentController == "products" && currentAction == "index";
@@ -44,15 +46,18 @@
         <nav class="navbar navbar-expand navbar-light bg-white border-bottom box-shadow">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">InsuranceApp</a>
-                <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav" aria-controls="sidebarNav"
-                        aria-expanded="false" aria-label="Toggle menu">
-                    <span class="menu-icon" aria-hidden="true">&#9776;</span> Menu
-                </button>
+                @if (showSidebar)
+                {
+                    <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav" aria-controls="sidebarNav"
+                            aria-expanded="false" aria-label="Toggle menu">
+                        <span class="menu-icon" aria-hidden="true">&#9776;</span> Menu
+                    </button>
+                }
                 <ul class="navbar-nav ms-auto align-items-center gap-2">
-                        @if (User.Identity?.IsAuthenticated == true)
+                        @if (isAuthenticated)
                         {
                             <li class="nav-item">
-                                <span class="nav-link text-dark mb-0"><span class="menu-icon" aria-hidden="true">&#128100;</span>@User.Identity.Name</span>
+                                <span class="nav-link text-dark mb-0"><span class="menu-icon" aria-hidden="true">&#128100;</span>@(User.Identity?.Name ?? "User")</span>
                             </li>
                             <li class="nav-item">
                                 <a class="btn btn-sm btn-outline-secondary" asp-controller="TwoFactor" asp-action="Status"><span class="menu-icon" aria-hidden="true">&#128737;</span>2FA</a>
@@ -67,6 +72,12 @@
                         else
                         {
                             <li class="nav-item">
+                                <a class="btn btn-sm btn-outline-secondary @(isHome ? "active" : string.Empty)" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-sm btn-outline-secondary @(isProducts ? "active" : string.Empty)" asp-controller="Products" asp-action="Index">Products</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Register">Register</a>
                             </li>
                             <li class="nav-item">
@@ -78,22 +89,22 @@
         </nav>
     </header>
     <div class="app-shell">
-        <aside id="sidebarNav" class="sidebar-nav collapse d-lg-block">
-            <nav>
-                <div class="sidebar-group">
-                    <button class="sidebar-parent @(generalActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuGeneral" aria-expanded="false" aria-controls="menuGeneral">
-                        <span class="menu-icon" aria-hidden="true">&#129517;</span>
-                        <span class="sidebar-parent-label">General</span>
-                        <span class="sidebar-caret" aria-hidden="true">&#9662;</span>
-                    </button>
-                    <ul id="menuGeneral" class="sidebar-list collapse">
-                        <li><a class="sidebar-link @(isHome ? "active" : string.Empty)" asp-controller="Home" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#127968;</span><span>Home</span></a></li>
-                        <li><a class="sidebar-link @(isProducts ? "active" : string.Empty)" asp-controller="Products" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128230;</span><span>Products</span></a></li>
-                    </ul>
-                </div>
+        @if (showSidebar)
+        {
+            <aside id="sidebarNav" class="sidebar-nav collapse d-lg-block">
+                <nav>
+                    <div class="sidebar-group">
+                        <button class="sidebar-parent @(generalActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuGeneral" aria-expanded="false" aria-controls="menuGeneral">
+                            <span class="menu-icon" aria-hidden="true">&#129517;</span>
+                            <span class="sidebar-parent-label">General</span>
+                            <span class="sidebar-caret" aria-hidden="true">&#9662;</span>
+                        </button>
+                        <ul id="menuGeneral" class="sidebar-list collapse">
+                            <li><a class="sidebar-link @(isHome ? "active" : string.Empty)" asp-controller="Home" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#127968;</span><span>Home</span></a></li>
+                            <li><a class="sidebar-link @(isProducts ? "active" : string.Empty)" asp-controller="Products" asp-action="Index"><span class="menu-icon" aria-hidden="true">&#128230;</span><span>Products</span></a></li>
+                        </ul>
+                    </div>
 
-                @if (User.Identity?.IsAuthenticated == true)
-                {
                     <div class="sidebar-group">
                         <button class="sidebar-parent @(customerActive ? "active" : string.Empty)" type="button" data-bs-toggle="collapse" data-bs-target="#menuCustomer" aria-expanded="false" aria-controls="menuCustomer">
                             <span class="menu-icon" aria-hidden="true">&#128188;</span>
@@ -144,9 +155,9 @@
                             </ul>
                         </div>
                     }
-                }
-            </nav>
-        </aside>
+                </nav>
+            </aside>
+        }
 
         <main role="main" class="app-content pb-3">
             <div class="content-container">

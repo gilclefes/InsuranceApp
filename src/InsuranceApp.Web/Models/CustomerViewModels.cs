@@ -56,7 +56,9 @@ public sealed class ProductDetailsViewModel
 
 public sealed class GetQuoteViewModel
 {
-    [Required]
+    [Required(AllowEmptyStrings = false)]
+    [RegularExpression(@".*\S.*", ErrorMessage = "Product code is required.")]
+    [StringLength(32)]
     public string ProductCode { get; set; } = string.Empty;
 
     public string ProductName { get; set; } = string.Empty;
@@ -67,19 +69,19 @@ public sealed class GetQuoteViewModel
 
     public decimal MaxCoverageAmount { get; set; }
 
-    [Range(0, 100000000)]
+    [Range(1, 100000000)]
     [Display(Name = "Coverage Amount (GHS)")]
     public decimal CoverageAmount { get; set; }
 
-    [Range(0, 100)]
+    [Range(1, 120)]
     [Display(Name = "Applicant Age")]
     public int ApplicantAge { get; set; } = 30;
 
-    [Range(0, 100000000)]
+    [Range(1, 100000000)]
     [Display(Name = "Vehicle Value (GHS)")]
     public decimal VehicleValue { get; set; }
 
-    [Range(0, 100000000)]
+    [Range(1, 100000000)]
     [Display(Name = "Sum Assured (GHS)")]
     public decimal SumAssured { get; set; }
 
@@ -109,10 +111,19 @@ public sealed class QuoteResultViewModel
 
 public sealed class ConfirmPolicyViewModel
 {
+    [Required(AllowEmptyStrings = false)]
+    [StringLength(40)]
     public string QuoteReference { get; set; } = string.Empty;
+    [Required(AllowEmptyStrings = false)]
+    [StringLength(32)]
     public string ProductCode { get; set; } = string.Empty;
+    [Required(AllowEmptyStrings = false)]
+    [StringLength(120)]
     public string ProductName { get; set; } = string.Empty;
+    [Range(0.01, 100000000)]
     public decimal TotalPremium { get; set; }
+    [Required(AllowEmptyStrings = false)]
+    [StringLength(8)]
     public string CurrencyCode { get; set; } = "GHS";
 
     [Required, StringLength(100)]
@@ -127,7 +138,8 @@ public sealed class ConfirmPolicyViewModel
     [Display(Name = "Cover Expiry Date")]
     public DateTime ExpiryDate { get; set; } = DateTime.UtcNow.Date.AddYears(1);
 
-    [Required]
+    [Required(AllowEmptyStrings = false)]
+    [StringLength(30)]
     [Display(Name = "Payment Channel")]
     public string PaymentChannel { get; set; } = "MoMo";
 
@@ -170,7 +182,9 @@ public sealed class MyClaimsViewModel
 
 public sealed class NewClaimViewModel
 {
-    [Required]
+    [Required(AllowEmptyStrings = false)]
+    [RegularExpression(@".*\S.*", ErrorMessage = "Policy number is required.")]
+    [StringLength(40)]
     [Display(Name = "Policy Number")]
     public string PolicyNumber { get; set; } = string.Empty;
 
